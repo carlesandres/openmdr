@@ -15,7 +15,7 @@
 		"lint": "oxlint --tsconfig tsconfig.json src/",
 		"format": "oxfmt src/",
 		"format:check": "oxfmt --check src/",
-		"test": "bun test test"
+		"test": "bun test"
 	},
 	"dependencies": {
 		"@effect/atom-react": "4.0.0-beta.59",

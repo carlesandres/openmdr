@@ -1,0 +1,4 @@
+[test]
+# Only discover tests under test/. Without this, `bun test` recurses into
+# reference/ (vendored opentui/ghui/glow source) and runs their test suites.
+root = "test"
