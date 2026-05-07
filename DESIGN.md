@@ -40,8 +40,9 @@ These are hard non-goals. We will say no to PRs that pull in this direction.
   arbitrary text into `openmdr` is out of scope.
 - **Not a custom-stylesheet platform** in v1. No JSON/YAML theme files. Themes are
   TypeScript objects shipped with the binary.
-- **Not a syntax-highlighter** in v1. Fenced code blocks render as plain text in a
-  subtly bordered box. Highlighting may arrive in v1.x.
+- **No custom markdown parser.** v1 uses opentui's built-in `<markdown>` renderer.
+  We reserve the right to swap to a custom remark/mdast pipeline in v2 if and only
+  if a concrete need (theming gap, link-following, search highlighting) forces it.
 
 ## 4. Target User & Use Cases
 
@@ -191,7 +192,7 @@ constrained renderers — we are not constrained.
 | Language | TypeScript | Strict mode. |
 | TUI framework | `@opentui/react` | JSX + hooks fit a multi-view app; matches `ghui`. |
 | State / IO | [Effect](https://effect.website) | Author wants to learn it; well-suited to async/IO when v2 features land. |
-| Markdown parsing | `remark` / `mdast-util-from-markdown` + `remark-gfm` | AST-first (we don't want HTML); GFM tables / tasklists / strikethrough free. |
+| Markdown rendering | `opentui`'s built-in `<markdown>` (`MarkdownRenderable`) | opentui ships a production-hardened markdown renderer with tables, tree-sitter syntax highlighting, and theme support via `SyntaxStyle`. Reusing it skips a large class of parsing/layout work and matches the "showcase opentui" goal. |
 | Linter | `oxlint` | Matches `ghui`. |
 | Formatter | `oxfmt` | Matches `ghui`. |
 | Tests | `bun test` | Stays in-runtime. |
@@ -209,8 +210,7 @@ and acceptable; refactors-toward-idiomatic-Effect are tracked as work in v1→v2
 src/
 ├── cli/         argv parsing; `openmdr [path]`, `--theme`, `--width`, `--all`, `--help`
 ├── discovery/   walk filesystem, apply gitignore, produce a sorted file list
-├── parser/      markdown source → mdast
-├── renderer/    mdast → opentui virtual DOM (a tree of <box>/<text>/etc.)
+├── reader/      wraps opentui's <markdown> (and any per-doc state: scroll, theme)
 ├── theme/       dark.ts, light.ts, detect.ts, types.ts
 ├── tui/         top-level App, Sidebar, Reader, HelpOverlay; keymap wiring
 └── index.tsx    Effect entry point: parse argv, build Layer, hand off to tui
@@ -225,13 +225,13 @@ argv ──► cli ──► (path, options)
               discovery ─► file list (signal/atom)
                                 │
                        user selects ▼
-                          parser ─► mdast
-                                      │
-                                      ▼
-                       renderer (theme) ─► opentui tree
-                                                │
-                                                ▼
-                                           rendered pane
+                          read file → string
+                                │
+                                ▼
+                          <markdown content={...} syntaxStyle={theme} />
+                                │
+                                ▼
+                          rendered pane (inside scrollbox)
 ```
 
 Discovery, parsing, and rendering are pure (Effect-y) functions of their inputs.
@@ -242,9 +242,8 @@ v2 without touching the renderer.
 ### 9.3 Effect layering (sketch)
 
 - `Discovery` service — `walk(path, opts) → Stream<FileEntry>`.
-- `Parser` service — `parse(source) → Effect<Mdast, ParseError>`.
-- `Renderer` service — `render(ast, theme, width) → OpentuiTree`.
-- `Theme` service — `detect() → Effect<Theme, never>`.
+- `FileReader` service — `read(path) → Effect<string, ReadError>`.
+- `Theme` service — `detect() → Effect<Theme, never>`; produces a `SyntaxStyle` for `<markdown>`.
 - App `Layer` composes these and hands the live runtime to the React tree via
   `@effect/atom-react`.
 
