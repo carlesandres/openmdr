@@ -359,6 +359,28 @@ relevant call sites. Grep for `TODO(revisit:` to enumerate them.
   - Trigger: when the third overlay surface lands, OR when the focus-routing
     `if` chain in `Browser.tsx` gets uncomfortable to read.
 
+- **User-configurable sidebar width**
+  - What it is: a setting (CLI flag and/or config file) that overrides the
+    sidebar width heuristic. Power users with strong layout preferences want
+    this; the heuristic alone won't satisfy everyone.
+  - Why deferred: the in-code heuristic
+    `clamp(28, floor(width * 0.25), 60)` is a sensible default and ships with
+    zero ceremony.
+  - Trigger: when the persistent config file lands (already on the deferred
+    list in §5.3) — wire `sidebarWidth` through it at the same time. A
+    standalone `--sidebar-width` flag is fine sooner if a real user asks.
+
+- **Sidebar truncation strategy**
+  - What it is: how long file paths are shortened when they exceed the
+    sidebar's width. Today: leading ellipsis, keeping the filename visible
+    (`…l/job_search/cv.md`). Plausible alternatives: middle-truncation
+    (`Personal/…/cv.md`), filename-first with dimmed parent dir, or a
+    two-line entry that shows both.
+  - Why deferred: the leading-ellipsis form is fine for a first pass; we
+    don't yet know which case is actually annoying in real use.
+  - Trigger: real-use friction with the leading-ellipsis form, OR feedback
+    that filename context is being lost.
+
 - **Custom remark/mdast renderer (replacing opentui's `<markdown>`)**
   - What it is: parse with `remark` + `remark-gfm`, walk the mdast, emit
     opentui boxes/text directly. Already noted in §3 non-goals as a

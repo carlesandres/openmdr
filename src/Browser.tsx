@@ -95,16 +95,32 @@ export const Browser = ({
 	const [content, setContent] = useState<string>("")
 	const [error, setError] = useState<string | null>(null)
 	const [focus, setFocus] = useState<"sidebar" | "reader">("sidebar")
+	const [sidebarVisible, setSidebarVisible] = useState<boolean>(true)
+	const [sidebarScroll, setSidebarScroll] = useState<number>(0)
 
 	const selected = files[selectedIndex]
 
+	// Track the path whose content is currently rendered. Updated lazily via
+	// a debounce: rapid j/k presses don't trigger a load+<markdown>-reflow
+	// per keystroke. The reflow is the synchronous, main-thread-blocking
+	// step inside opentui's host commit — useDeferredValue can't yield once
+	// the host begins it. A real debounce gates the load itself.
+	const [renderedPath, setRenderedPath] = useState<string | null>(selected?.path ?? null)
+
 	useEffect(() => {
-		if (!selected) {
+		const target = selected?.path ?? null
+		if (target === renderedPath) return
+		const timer = setTimeout(() => setRenderedPath(target), 80)
+		return () => clearTimeout(timer)
+	}, [selected, renderedPath])
+
+	useEffect(() => {
+		if (!renderedPath) {
 			setContent("")
 			return
 		}
 		let cancelled = false
-		readFile(selected.path).then(
+		readFile(renderedPath).then(
 			(text) => {
 				if (!cancelled) {
 					setContent(text)
@@ -114,21 +130,23 @@ export const Browser = ({
 			(err: unknown) => {
 				if (!cancelled) {
 					setContent("")
-					setError(`Cannot read ${selected.relativePath}: ${String(err)}`)
+					setError(`Cannot read ${renderedPath}: ${String(err)}`)
 				}
 			},
 		)
 		return () => {
 			cancelled = true
 		}
-	}, [selected, readFile])
+	}, [renderedPath, readFile])
 
 	useKeyboard((key) => {
 		const ctx: BrowserCtx = {
 			files,
 			focus,
+			sidebarVisible,
 			setFocus,
-			setSelectedIndex: (updater) => setSelectedIndex(updater),
+			setSelectedIndex,
+			setSidebarVisible,
 			quit: () => {
 				if (onQuit) {
 					onQuit()
@@ -141,39 +159,71 @@ export const Browser = ({
 		dispatch(browserBindings, ctx, key)
 	})
 
-	const sidebarWidth = 32
+	// Min/max-clamped percentage of viewport: narrow terminals stay readable,
+	// wide terminals get more room without wasting space at extremes.
+	// User-configurable width is deferred — see DESIGN.md §12.
+	const sidebarWidth = Math.max(28, Math.min(60, Math.floor(width * 0.25)))
 	const sidebarActive = focus === "sidebar"
 	const readerActive = focus === "reader"
 	const sidebarTitle = sidebarActive ? " ▸ files " : "   files "
 	const readerLabel = selected?.relativePath ?? title
 	const readerTitle = readerActive ? ` ▸ ${readerLabel} ` : `   ${readerLabel} `
 
+	// Sidebar virtualization: render only the visible window. Without this,
+	// every keystroke re-renders all N file rows even though only the bg of
+	// two of them changed (old + new selected). On a 195-file vault that
+	// dominates the per-keystroke cost.
+	const sidebarBodyHeight = Math.max(1, height - 2) // minus top/bottom border
+	const maxScroll = Math.max(0, files.length - sidebarBodyHeight)
+	const desiredScroll = (() => {
+		let s = sidebarScroll
+		if (selectedIndex < s) s = selectedIndex
+		else if (selectedIndex >= s + sidebarBodyHeight) s = selectedIndex - sidebarBodyHeight + 1
+		return clamp(s, 0, maxScroll)
+	})()
+	useEffect(() => {
+		if (desiredScroll !== sidebarScroll) setSidebarScroll(desiredScroll)
+	}, [desiredScroll, sidebarScroll])
+	const visibleFiles = files.slice(desiredScroll, desiredScroll + sidebarBodyHeight)
+	// Available width for sidebar text rows: box width minus 1-cell border on each side.
+	const sidebarTextWidth = Math.max(4, sidebarWidth - 2)
+	// Right-anchored truncation: keep the filename visible, lose the prefix
+	// with a leading ellipsis when the path is too long.
+	const truncatePath = (s: string): string =>
+		s.length <= sidebarTextWidth ? s : "…" + s.slice(s.length - sidebarTextWidth + 1)
+
 	return (
 		<box style={{ width, height, flexDirection: "column", backgroundColor: BG }}>
 			<box style={{ flexDirection: "row", flexGrow: 1, flexShrink: 1, backgroundColor: BG }}>
-				<box
-					title={sidebarTitle}
-					titleAlignment="left"
-					style={{
-						border: true,
-						borderColor: sidebarActive ? BORDER_ACTIVE : BORDER_INACTIVE,
-						width: sidebarWidth,
-						flexShrink: 0,
-						flexDirection: "column",
-						backgroundColor: SIDEBAR_BG,
-					}}
-				>
-					{files.length === 0 ? (
-						<text content="(no markdown files)" style={{ fg: FG_MUTED }} />
-					) : (
-						files.map((file, idx) => {
-							const isSelected = idx === selectedIndex
-							if (!isSelected) return <text key={file.path} content={file.relativePath} style={{ fg: FG }} />
-							const bg = sidebarActive ? SELECTED_BG_ACTIVE : SELECTED_BG_INACTIVE
-							return <text key={file.path} content={file.relativePath} style={{ fg: FG_BRIGHT, bg }} />
-						})
-					)}
-				</box>
+				{sidebarVisible && (
+					<box
+						title={sidebarTitle}
+						titleAlignment="left"
+						style={{
+							border: true,
+							borderColor: sidebarActive ? BORDER_ACTIVE : BORDER_INACTIVE,
+							width: sidebarWidth,
+							flexShrink: 0,
+							flexDirection: "column",
+							backgroundColor: SIDEBAR_BG,
+						}}
+					>
+						{files.length === 0 ? (
+							<text content="(no markdown files)" style={{ fg: FG_MUTED }} />
+						) : (
+							visibleFiles.map((file, idx) => {
+								const realIdx = desiredScroll + idx
+								const isSelected = realIdx === selectedIndex
+								const display = truncatePath(file.relativePath)
+								if (!isSelected) {
+									return <text key={file.path} content={display} wrapMode="none" style={{ fg: FG }} />
+								}
+								const bg = sidebarActive ? SELECTED_BG_ACTIVE : SELECTED_BG_INACTIVE
+								return <text key={file.path} content={display} wrapMode="none" style={{ fg: FG_BRIGHT, bg }} />
+							})
+						)}
+					</box>
+				)}
 				<box
 					title={readerTitle}
 					titleAlignment="left"
@@ -200,7 +250,7 @@ export const Browser = ({
 							focused={readerActive}
 						>
 							<markdown
-								key={selected?.path ?? "empty"}
+								key={renderedPath ?? "empty"}
 								content={content}
 								syntaxStyle={syntaxStyle}
 								fg={FG}

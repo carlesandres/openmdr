@@ -313,6 +313,175 @@ describe("Browser — focus", () => {
 	})
 })
 
+describe("Browser — sidebar toggle", () => {
+	test("\\ hides the sidebar and shifts focus to the reader", async () => {
+		await act(async () => {
+			setup = await testRender(
+				<Browser files={makeFiles(["a.md"])} readFile={makeReader({ "a.md": "x" })} onQuit={() => {}} />,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(setup!.captureCharFrame()).toContain("files")
+
+		await act(async () => {
+			setup!.mockInput.pressKey("\\")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).not.toContain("files")
+		// Reader becomes the active pane.
+		expect(frame).toContain("▸ a.md")
+	})
+
+	test("pressing \\ again restores the sidebar and focuses it", async () => {
+		await act(async () => {
+			setup = await testRender(
+				<Browser files={makeFiles(["a.md"])} readFile={makeReader({ "a.md": "x" })} onQuit={() => {}} />,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("\\")
+		})
+		await stepFrame(setup!.renderOnce)
+		await act(async () => {
+			setup!.mockInput.pressKey("\\")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).toContain("▸ files")
+	})
+})
+
+describe("Browser — jump and page keys", () => {
+	const tenFiles = makeFiles(Array.from({ length: 10 }, (_, i) => `f${i}.md`))
+	const reader = makeReader(Object.fromEntries(tenFiles.map((f) => [f.relativePath, f.relativePath])))
+
+	test("shift+j jumps 8 lines down", async () => {
+		await act(async () => {
+			setup = await testRender(
+				<Browser files={tenFiles} readFile={reader} onQuit={() => {}} />,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("j", { shift: true })
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(readerTitleContains(setup!.captureCharFrame(), "f8.md")).toBe(true)
+	})
+
+	test("shift+k jumps 8 lines up", async () => {
+		await act(async () => {
+			setup = await testRender(
+				<Browser files={tenFiles} initialIndex={9} readFile={reader} onQuit={() => {}} />,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("k", { shift: true })
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(readerTitleContains(setup!.captureCharFrame(), "f1.md")).toBe(true)
+	})
+
+	test("space pages selection down by 8", async () => {
+		await act(async () => {
+			setup = await testRender(
+				<Browser files={tenFiles} readFile={reader} onQuit={() => {}} />,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			// pressKey expects a single-char string for space — not the literal "space".
+			setup!.mockInput.pressKey(" ")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(readerTitleContains(setup!.captureCharFrame(), "f8.md")).toBe(true)
+	})
+
+	test("b pages selection up by 8", async () => {
+		await act(async () => {
+			setup = await testRender(
+				<Browser files={tenFiles} initialIndex={9} readFile={reader} onQuit={() => {}} />,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("b")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(readerTitleContains(setup!.captureCharFrame(), "f1.md")).toBe(true)
+	})
+})
+
+describe("Browser — reader [ / ] navigates files", () => {
+	test("] selects next file while reader is focused", async () => {
+		const files = makeFiles(["a.md", "b.md", "c.md"])
+		await act(async () => {
+			setup = await testRender(
+				<Browser
+					files={files}
+					readFile={makeReader({ "a.md": "x", "b.md": "y", "c.md": "z" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+		// Switch to reader focus.
+		await act(async () => {
+			setup!.mockInput.pressTab()
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("]")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(readerTitleContains(setup!.captureCharFrame(), "b.md")).toBe(true)
+	})
+
+	test("[ selects previous file while reader is focused", async () => {
+		const files = makeFiles(["a.md", "b.md", "c.md"])
+		await act(async () => {
+			setup = await testRender(
+				<Browser
+					files={files}
+					initialIndex={2}
+					readFile={makeReader({ "a.md": "x", "b.md": "y", "c.md": "z" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+		await act(async () => {
+			setup!.mockInput.pressTab()
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("[")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(readerTitleContains(setup!.captureCharFrame(), "b.md")).toBe(true)
+	})
+})
+
 describe("Browser — quit", () => {
 	test("q invokes onQuit", async () => {
 		let calls = 0
