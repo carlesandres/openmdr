@@ -329,17 +329,15 @@ signal fires, re-read this section.
 Inline `// TODO(revisit: <topic>)` markers in the code point here from the
 relevant call sites. Grep for `TODO(revisit:` to enumerate them.
 
-- **Declarative keymap as data (à la ghui's `@ghui/keymap`)**
-  - What it is: bindings as values — `{ id, title, keys, enabled?, run }` — with
-    a dispatcher, scoped contexts via contramap, and per-binding metadata that
-    a help overlay or command palette can iterate. ghui has a ~600-line
-    workspace package that does this; we don't need that scale, but we do need
-    *some* of the shape.
-  - Why deferred: a single `useKeyboard` switch is clearer for v1 with one main
-    interactive surface (the Browser).
-  - Trigger: implementing the `?` help overlay (it needs to enumerate bindings
-    without duplicating the source of truth), **or** adding a third
-    interactive overlay/modal (search, filter, command palette).
+- **Declarative keymap as data — small in-house version landed.**
+  Bindings as values with `{ id, description, keys, when?, run }` and a pure
+  `dispatch` live in `src/keymap/`. The shape is enough to drive `useKeyboard`
+  *and* the upcoming `?` help overlay from one source of truth.
+  - **Outstanding ghui machinery (still deferred):** chord sequences (`g g`),
+    vim count prefixes (`5j`), scoped contexts via contramap, conflict
+    detection, command-palette routing.
+  - Trigger to revisit: a third interactive overlay/modal lands (search,
+    filter, command palette), OR a real need for chord/count input emerges.
 
 - **Theme as a typed token interface (ghui's `ColorPalette`)**
   - What it is: a `Theme` interface with semantic tokens (`background`,

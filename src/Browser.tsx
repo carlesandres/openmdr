@@ -16,6 +16,8 @@ import { Effect } from "effect"
 import { useEffect, useMemo, useState } from "react"
 import { type FileEntry } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
+import { browserBindings, type BrowserCtx } from "./keymap/browser.ts"
+import { dispatch } from "./keymap/keymap.ts"
 
 // TODO(revisit: theme tokens) — see DESIGN.md §12.
 // Duplicated in src/index.tsx (App). Extract to src/theme/ before adding the
@@ -121,43 +123,22 @@ export const Browser = ({
 		}
 	}, [selected, readFile])
 
-	// TODO(revisit: declarative keymap) — see DESIGN.md §12.
-	// Replace this switch with a KeyBinding[] data structure when the `?`
-	// help overlay lands; the help text needs to enumerate bindings without
-	// duplicating the source of truth.
 	useKeyboard((key) => {
-		if (key.name === "q" || (key.ctrl && key.name === "c")) {
-			if (onQuit) {
-				onQuit()
-				return
-			}
-			renderer?.destroy()
-			process.exit(0)
+		const ctx: BrowserCtx = {
+			files,
+			focus,
+			setFocus,
+			setSelectedIndex: (updater) => setSelectedIndex(updater),
+			quit: () => {
+				if (onQuit) {
+					onQuit()
+					return
+				}
+				renderer?.destroy()
+				process.exit(0)
+			},
 		}
-		if (key.name === "tab") {
-			setFocus((f) => (f === "sidebar" ? "reader" : "sidebar"))
-			return
-		}
-		if (focus === "sidebar") {
-			if (files.length === 0) return
-			if (key.name === "j" || key.name === "down") {
-				setSelectedIndex((i) => clamp(i + 1, 0, files.length - 1))
-			} else if (key.name === "k" || key.name === "up") {
-				setSelectedIndex((i) => clamp(i - 1, 0, files.length - 1))
-			} else if (key.name === "g" && !key.shift) {
-				setSelectedIndex(0)
-			} else if (key.name === "g" && key.shift) {
-				setSelectedIndex(files.length - 1)
-			} else if (key.name === "return" || key.name === "right" || key.name === "l") {
-				setFocus("reader")
-			}
-			return
-		}
-		// focus === "reader" — most scroll keys are handled by the focused
-		// scrollbox; we only need to handle the back-to-sidebar bindings.
-		if (key.name === "escape" || key.name === "left" || key.name === "h") {
-			setFocus("sidebar")
-		}
+		dispatch(browserBindings, ctx, key)
 	})
 
 	const sidebarWidth = 32
