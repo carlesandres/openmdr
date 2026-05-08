@@ -10,7 +10,7 @@
  * sidebar collapse with `\`, help overlay.
  */
 
-import { parseColor, SyntaxStyle } from "@opentui/core"
+import { SyntaxStyle } from "@opentui/core"
 import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
 import { Effect } from "effect"
 import { useEffect, useMemo, useState } from "react"
@@ -19,54 +19,7 @@ import { HelpOverlay } from "./HelpOverlay.tsx"
 import { readFileText } from "./io/readFile.ts"
 import { browserBindings, type BrowserCtx } from "./keymap/browser.ts"
 import { dispatch } from "./keymap/keymap.ts"
-
-// TODO(revisit: theme tokens) — see DESIGN.md §12.
-// Duplicated in src/index.tsx (App). Extract to src/theme/ before adding the
-// light theme; replace raw constants with a Theme interface of semantic tokens.
-const darkStyles = {
-	keyword: { fg: parseColor("#81A1C1"), bold: true },
-	string: { fg: parseColor("#A3BE8C") },
-	comment: { fg: parseColor("#616E88"), italic: true },
-	number: { fg: parseColor("#B48EAD") },
-	function: { fg: parseColor("#88C0D0") },
-	type: { fg: parseColor("#8FBCBB") },
-	operator: { fg: parseColor("#81A1C1") },
-	variable: { fg: parseColor("#D8DEE9") },
-	property: { fg: parseColor("#88C0D0") },
-	"punctuation.bracket": { fg: parseColor("#ECEFF4") },
-	"punctuation.delimiter": { fg: parseColor("#ECEFF4") },
-	"markup.heading": { fg: parseColor("#88C0D0"), bold: true },
-	"markup.heading.1": { fg: parseColor("#8FBCBB"), bold: true, underline: true },
-	"markup.heading.2": { fg: parseColor("#88C0D0"), bold: true },
-	"markup.heading.3": { fg: parseColor("#81A1C1") },
-	"markup.bold": { fg: parseColor("#ECEFF4"), bold: true },
-	"markup.strong": { fg: parseColor("#ECEFF4"), bold: true },
-	"markup.italic": { fg: parseColor("#ECEFF4"), italic: true },
-	"markup.list": { fg: parseColor("#EBCB8B") },
-	"markup.quote": { fg: parseColor("#81A1C1"), italic: true },
-	"markup.raw": { fg: parseColor("#A3BE8C"), bg: parseColor("#3B4252") },
-	"markup.raw.block": { fg: parseColor("#A3BE8C"), bg: parseColor("#3B4252") },
-	"markup.raw.inline": { fg: parseColor("#A3BE8C"), bg: parseColor("#3B4252") },
-	"markup.link": { fg: parseColor("#88C0D0"), underline: true },
-	"markup.link.label": { fg: parseColor("#A3BE8C"), underline: true },
-	"markup.link.url": { fg: parseColor("#88C0D0"), underline: true },
-	label: { fg: parseColor("#A3BE8C") },
-	conceal: { fg: parseColor("#4C566A") },
-	"punctuation.special": { fg: parseColor("#616E88") },
-	default: { fg: parseColor("#D8DEE9") },
-}
-
-const BG = "#2E3440"
-const FG = "#D8DEE9"
-const FG_BRIGHT = "#ECEFF4"
-const FG_MUTED = "#7B8794"
-const SIDEBAR_BG = "#3B4252"
-/** Highlighted selection in the active sidebar. */
-const SELECTED_BG_ACTIVE = "#5E81AC"
-/** Dimmed selection when sidebar is not the focused pane. */
-const SELECTED_BG_INACTIVE = "#434C5E"
-const BORDER_INACTIVE = "#4C566A"
-const BORDER_ACTIVE = "#88C0D0"
+import { colors } from "./theme/colors.ts"
 
 export interface BrowserProps {
 	readonly files: readonly FileEntry[]
@@ -90,7 +43,7 @@ export const Browser = ({
 }: BrowserProps) => {
 	const renderer = useRenderer()
 	const { width, height } = useTerminalDimensions()
-	const syntaxStyle = useMemo(() => SyntaxStyle.fromStyles(darkStyles), [])
+	const syntaxStyle = useMemo(() => SyntaxStyle.fromStyles(colors.syntax), [])
 
 	const [selectedIndex, setSelectedIndex] = useState(() => clamp(initialIndex, 0, Math.max(0, files.length - 1)))
 	const [content, setContent] = useState<string>("")
@@ -206,33 +159,33 @@ export const Browser = ({
 		s.length <= sidebarTextWidth ? s : "…" + s.slice(s.length - sidebarTextWidth + 1)
 
 	return (
-		<box style={{ width, height, flexDirection: "column", backgroundColor: BG }}>
-			<box style={{ flexDirection: "row", flexGrow: 1, flexShrink: 1, backgroundColor: BG }}>
+		<box style={{ width, height, flexDirection: "column", backgroundColor: colors.background }}>
+			<box style={{ flexDirection: "row", flexGrow: 1, flexShrink: 1, backgroundColor: colors.background }}>
 				{sidebarVisible && (
 					<box
 						title={sidebarTitle}
 						titleAlignment="left"
 						style={{
 							border: true,
-							borderColor: sidebarActive ? BORDER_ACTIVE : BORDER_INACTIVE,
+							borderColor: sidebarActive ? colors.borderActive : colors.border,
 							width: sidebarWidth,
 							flexShrink: 0,
 							flexDirection: "column",
-							backgroundColor: SIDEBAR_BG,
+							backgroundColor: colors.surface,
 						}}
 					>
 						{files.length === 0 ? (
-							<text content="(no markdown files)" style={{ fg: FG_MUTED }} />
+							<text content="(no markdown files)" style={{ fg: colors.textMuted }} />
 						) : (
 							visibleFiles.map((file, idx) => {
 								const realIdx = desiredScroll + idx
 								const isSelected = realIdx === selectedIndex
 								const display = truncatePath(file.relativePath)
 								if (!isSelected) {
-									return <text key={file.path} content={display} wrapMode="none" style={{ fg: FG }} />
+									return <text key={file.path} content={display} wrapMode="none" style={{ fg: colors.text }} />
 								}
-								const bg = sidebarActive ? SELECTED_BG_ACTIVE : SELECTED_BG_INACTIVE
-								return <text key={file.path} content={display} wrapMode="none" style={{ fg: FG_BRIGHT, bg }} />
+								const bg = sidebarActive ? colors.selectedBg : colors.selectedBgInactive
+								return <text key={file.path} content={display} wrapMode="none" style={{ fg: colors.textStrong, bg }} />
 							})
 						)}
 					</box>
@@ -242,15 +195,15 @@ export const Browser = ({
 					titleAlignment="left"
 					style={{
 						border: true,
-						borderColor: readerActive ? BORDER_ACTIVE : BORDER_INACTIVE,
+						borderColor: readerActive ? colors.borderActive : colors.border,
 						padding: 1,
 						flexGrow: 1,
 						flexShrink: 1,
-						backgroundColor: BG,
+						backgroundColor: colors.background,
 					}}
 				>
 					{error ? (
-						<text content={error} style={{ fg: "#BF616A" }} />
+						<text content={error} style={{ fg: colors.error }} />
 					) : (
 						<scrollbox
 							style={{
@@ -258,7 +211,7 @@ export const Browser = ({
 								scrollX: false,
 								flexGrow: 1,
 								flexShrink: 1,
-								backgroundColor: BG,
+								backgroundColor: colors.background,
 							}}
 							focused={readerActive}
 						>
@@ -266,8 +219,8 @@ export const Browser = ({
 								key={renderedPath ?? "empty"}
 								content={content}
 								syntaxStyle={syntaxStyle}
-								fg={FG}
-								bg={BG}
+								fg={colors.text}
+								bg={colors.background}
 								conceal
 								style={{ width: "100%" }}
 							/>

@@ -339,16 +339,17 @@ relevant call sites. Grep for `TODO(revisit:` to enumerate them.
   - Trigger to revisit: a third interactive overlay/modal lands (search,
     filter, command palette), OR a real need for chord/count input emerges.
 
-- **Theme as a typed token interface (ghui's `ColorPalette`)**
-  - What it is: a `Theme` interface with semantic tokens (`background`,
-    `text`, `muted`, `accent`, `selectedBg`, `border.active`,
-    `border.inactive`, …). Multiple themes implement it; consumers reference
-    tokens, not raw colors.
-  - Why deferred: only one (dark) theme exists; named constants in
-    `Browser.tsx` are clearer at this scale.
-  - Trigger: **before** introducing the light theme. Doing it as part of the
-    auto-detect change is fine; doing it after means duplicating constants
-    twice.
+- **Theme as a typed token interface — landed.**
+  Implemented in `src/theme/`: `ColorPalette` interface (~12 semantic tokens),
+  a `themeDefinitions` registry, and a mutable singleton `colors` consumers
+  read directly. Modeled on ghui but at our smaller scale.
+  - **Outstanding ghui machinery (still deferred):** large named-theme set
+    (ghui ships 27), `ThemeConfig` distinguishing fixed-vs-system mode, OS
+    appearance auto-detect, persistent config file, runtime theme switcher.
+  - Trigger to revisit (system mode + auto-detect): a user explicitly asks
+    for it, OR when the persistent config file lands. Trigger to revisit
+    (runtime theme switcher / theme version state for re-render): when a
+    "press `t` to cycle themes" UX is on the table.
 
 - **Keymap composition / scoped contexts**
   - What it is: per-view keymaps that compose via `Keymap.scope(predicate)` so
