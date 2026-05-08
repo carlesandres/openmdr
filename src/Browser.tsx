@@ -17,6 +17,9 @@ import { useEffect, useMemo, useState } from "react"
 import { type FileEntry } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
 
+// TODO(revisit: theme tokens) — see DESIGN.md §12.
+// Duplicated in src/index.tsx (App). Extract to src/theme/ before adding the
+// light theme; replace raw constants with a Theme interface of semantic tokens.
 const darkStyles = {
 	keyword: { fg: parseColor("#81A1C1"), bold: true },
 	string: { fg: parseColor("#A3BE8C") },
@@ -118,6 +121,10 @@ export const Browser = ({
 		}
 	}, [selected, readFile])
 
+	// TODO(revisit: declarative keymap) — see DESIGN.md §12.
+	// Replace this switch with a KeyBinding[] data structure when the `?`
+	// help overlay lands; the help text needs to enumerate bindings without
+	// duplicating the source of truth.
 	useKeyboard((key) => {
 		if (key.name === "q" || (key.ctrl && key.name === "c")) {
 			if (onQuit) {

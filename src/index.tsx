@@ -18,8 +18,9 @@ import { parseArgv } from "./cli/argv.ts"
 import { walk } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
 
-// Minimal dark theme — straight from opentui's markdown demo (Nord-ish).
-// Will move to src/theme/ when theme detection lands.
+// TODO(revisit: theme tokens) — see DESIGN.md §12.
+// Duplicated in src/Browser.tsx. Extract to src/theme/ before adding the light
+// theme; replace raw constants with a Theme interface of semantic tokens.
 const darkStyles = {
 	keyword: { fg: parseColor("#81A1C1"), bold: true },
 	string: { fg: parseColor("#A3BE8C") },

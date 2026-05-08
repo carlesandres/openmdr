@@ -320,7 +320,56 @@ Things we will learn by building, not by debating.
   navigable link nodes; done poorly, we re-architect.
 - Bun's standalone binary size — acceptable, or do we need a slim build path?
 
-## 12. References
+## 12. Patterns to revisit
+
+Approaches we deliberately did *not* adopt, with the trigger that should bring
+us back. Each entry pairs a deferred pattern with a concrete signal — when that
+signal fires, re-read this section.
+
+Inline `// TODO(revisit: <topic>)` markers in the code point here from the
+relevant call sites. Grep for `TODO(revisit:` to enumerate them.
+
+- **Declarative keymap as data (à la ghui's `@ghui/keymap`)**
+  - What it is: bindings as values — `{ id, title, keys, enabled?, run }` — with
+    a dispatcher, scoped contexts via contramap, and per-binding metadata that
+    a help overlay or command palette can iterate. ghui has a ~600-line
+    workspace package that does this; we don't need that scale, but we do need
+    *some* of the shape.
+  - Why deferred: a single `useKeyboard` switch is clearer for v1 with one main
+    interactive surface (the Browser).
+  - Trigger: implementing the `?` help overlay (it needs to enumerate bindings
+    without duplicating the source of truth), **or** adding a third
+    interactive overlay/modal (search, filter, command palette).
+
+- **Theme as a typed token interface (ghui's `ColorPalette`)**
+  - What it is: a `Theme` interface with semantic tokens (`background`,
+    `text`, `muted`, `accent`, `selectedBg`, `border.active`,
+    `border.inactive`, …). Multiple themes implement it; consumers reference
+    tokens, not raw colors.
+  - Why deferred: only one (dark) theme exists; named constants in
+    `Browser.tsx` are clearer at this scale.
+  - Trigger: **before** introducing the light theme. Doing it as part of the
+    auto-detect change is fine; doing it after means duplicating constants
+    twice.
+
+- **Keymap composition / scoped contexts**
+  - What it is: per-view keymaps that compose via `Keymap.scope(predicate)` so
+    modal bindings stack on top of base bindings without giant if/else
+    routing in one handler.
+  - Why deferred: routing-by-state in our single `useKeyboard` is fine for
+    sidebar-vs-reader.
+  - Trigger: when the third overlay surface lands, OR when the focus-routing
+    `if` chain in `Browser.tsx` gets uncomfortable to read.
+
+- **Custom remark/mdast renderer (replacing opentui's `<markdown>`)**
+  - What it is: parse with `remark` + `remark-gfm`, walk the mdast, emit
+    opentui boxes/text directly. Already noted in §3 non-goals as a
+    reserved-right swap.
+  - Trigger: a concrete need we can't solve inside `<markdown>` —
+    cross-file link following, in-document search highlighting, theming
+    tokens that `SyntaxStyle` doesn't expose.
+
+## 13. References
 
 - glow — https://github.com/charmbracelet/glow (Go reference; in `reference/glow/`)
 - ghui — https://github.com/kitlangton/ghui (opentui+Effect precedent; in `reference/ghui/`)
