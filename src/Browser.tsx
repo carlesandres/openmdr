@@ -15,6 +15,7 @@ import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
 import { Effect } from "effect"
 import { useEffect, useMemo, useState } from "react"
 import { type FileEntry } from "./discovery/walk.ts"
+import { HelpOverlay } from "./HelpOverlay.tsx"
 import { readFileText } from "./io/readFile.ts"
 import { browserBindings, type BrowserCtx } from "./keymap/browser.ts"
 import { dispatch } from "./keymap/keymap.ts"
@@ -97,6 +98,7 @@ export const Browser = ({
 	const [focus, setFocus] = useState<"sidebar" | "reader">("sidebar")
 	const [sidebarVisible, setSidebarVisible] = useState<boolean>(true)
 	const [sidebarScroll, setSidebarScroll] = useState<number>(0)
+	const [helpVisible, setHelpVisible] = useState<boolean>(false)
 
 	const selected = files[selectedIndex]
 
@@ -140,13 +142,24 @@ export const Browser = ({
 	}, [renderedPath, readFile])
 
 	useKeyboard((key) => {
+		// While help is open, swallow most keys: only ? (toggle) and esc
+		// (close) work, so the user can read without driving the UI behind.
+		// This is the one place we step outside the data-driven keymap; the
+		// alternative — adding `when: !c.helpVisible` to every other binding
+		// — would clutter the array. See DESIGN.md §12 (keymap composition).
+		if (helpVisible) {
+			if (key.name === "?" || key.name === "escape") setHelpVisible(false)
+			return
+		}
 		const ctx: BrowserCtx = {
 			files,
 			focus,
 			sidebarVisible,
+			helpVisible,
 			setFocus,
 			setSelectedIndex,
 			setSidebarVisible,
+			setHelpVisible,
 			quit: () => {
 				if (onQuit) {
 					onQuit()
@@ -262,6 +275,13 @@ export const Browser = ({
 					)}
 				</box>
 			</box>
+			{helpVisible && (
+				<HelpOverlay
+					bindings={browserBindings}
+					viewportWidth={width}
+					viewportHeight={height}
+				/>
+			)}
 		</box>
 	)
 }

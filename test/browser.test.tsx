@@ -482,6 +482,107 @@ describe("Browser — reader [ / ] navigates files", () => {
 	})
 })
 
+describe("Browser — help overlay", () => {
+	test("? opens the help overlay; section headers and bindings appear", async () => {
+		await act(async () => {
+			setup = await testRender(
+				<Browser files={makeFiles(["a.md"])} readFile={makeReader({ "a.md": "x" })} onQuit={() => {}} />,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).toContain("Help")
+		// Section headers from the binding groups
+		expect(frame).toContain("Global")
+		expect(frame).toContain("Sidebar")
+		expect(frame).toContain("Reader")
+		// At least one binding's keys + description visible
+		expect(frame).toContain("Quit")
+		expect(frame).toContain("Toggle sidebar visibility")
+	})
+
+	test("? again closes the help overlay", async () => {
+		await act(async () => {
+			setup = await testRender(
+				<Browser files={makeFiles(["a.md"])} readFile={makeReader({ "a.md": "x" })} onQuit={() => {}} />,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(setup!.captureCharFrame()).toContain("Help")
+
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(setup!.captureCharFrame()).not.toContain("Help")
+	})
+
+	test("escape closes the help overlay", async () => {
+		await act(async () => {
+			setup = await testRender(
+				<Browser files={makeFiles(["a.md"])} readFile={makeReader({ "a.md": "x" })} onQuit={() => {}} />,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressEscape()
+			await new Promise<void>((resolve) => setTimeout(resolve, 60))
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(setup!.captureCharFrame()).not.toContain("Help")
+	})
+
+	test("while help is open, j does not move sidebar selection", async () => {
+		const files = makeFiles(["a.md", "b.md"])
+		await act(async () => {
+			setup = await testRender(
+				<Browser files={files} readFile={makeReader({ "a.md": "x", "b.md": "y" })} onQuit={() => {}} />,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		// Open help.
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		// j should be swallowed.
+		await act(async () => {
+			setup!.mockInput.pressKey("j")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		// Close help, then check sidebar is still on a.md.
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(readerTitleContains(setup!.captureCharFrame(), "a.md")).toBe(true)
+	})
+})
+
 describe("Browser — quit", () => {
 	test("q invokes onQuit", async () => {
 		let calls = 0

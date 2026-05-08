@@ -12,9 +12,11 @@ export interface BrowserCtx {
 	readonly files: readonly FileEntry[]
 	readonly focus: BrowserFocus
 	readonly sidebarVisible: boolean
+	readonly helpVisible: boolean
 	readonly setFocus: (next: BrowserFocus | ((prev: BrowserFocus) => BrowserFocus)) => void
 	readonly setSelectedIndex: (updater: (prev: number) => number) => void
 	readonly setSidebarVisible: (updater: (prev: boolean) => boolean) => void
+	readonly setHelpVisible: (updater: (prev: boolean) => boolean) => void
 	readonly quit: () => void
 }
 
@@ -35,15 +37,17 @@ const inReaderWithFiles = (c: BrowserCtx) => inReader(c) && haveFiles(c)
 
 export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	// Global
-	{ id: "quit", description: "Quit", keys: ["q", "ctrl+c"], run: (c) => c.quit() },
+	{ id: "quit", group: "Global", description: "Quit", keys: ["q", "ctrl+c"], run: (c) => c.quit() },
 	{
 		id: "focus.toggle",
+		group: "Global",
 		description: "Toggle focus (sidebar ↔ reader)",
 		keys: ["tab"],
 		run: (c) => c.setFocus((f) => (f === "sidebar" ? "reader" : "sidebar")),
 	},
 	{
 		id: "sidebar.toggle",
+		group: "Global",
 		description: "Toggle sidebar visibility",
 		keys: ["\\"],
 		run: (c) => {
@@ -54,10 +58,18 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 			c.setFocus(willHide ? "reader" : "sidebar")
 		},
 	},
+	{
+		id: "help.toggle",
+		group: "Global",
+		description: "Show / dismiss help",
+		keys: ["?"],
+		run: (c) => c.setHelpVisible((v) => !v),
+	},
 
 	// Sidebar
 	{
 		id: "sidebar.down",
+		group: "Sidebar",
 		description: "Move selection down",
 		keys: ["j", "down"],
 		when: inSidebarWithFiles,
@@ -65,6 +77,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	},
 	{
 		id: "sidebar.up",
+		group: "Sidebar",
 		description: "Move selection up",
 		keys: ["k", "up"],
 		when: inSidebarWithFiles,
@@ -72,6 +85,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	},
 	{
 		id: "sidebar.jumpDown",
+		group: "Sidebar",
 		description: `Jump down ${JUMP}`,
 		keys: ["shift+j"],
 		when: inSidebarWithFiles,
@@ -79,6 +93,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	},
 	{
 		id: "sidebar.jumpUp",
+		group: "Sidebar",
 		description: `Jump up ${JUMP}`,
 		keys: ["shift+k"],
 		when: inSidebarWithFiles,
@@ -86,6 +101,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	},
 	{
 		id: "sidebar.pageDown",
+		group: "Sidebar",
 		description: "Page down",
 		keys: ["space", "pagedown", "ctrl+d"],
 		when: inSidebarWithFiles,
@@ -93,6 +109,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	},
 	{
 		id: "sidebar.pageUp",
+		group: "Sidebar",
 		description: "Page up",
 		keys: ["b", "pageup", "ctrl+u"],
 		when: inSidebarWithFiles,
@@ -100,6 +117,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	},
 	{
 		id: "sidebar.top",
+		group: "Sidebar",
 		description: "Jump to first file",
 		keys: ["g"],
 		when: inSidebarWithFiles,
@@ -107,6 +125,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	},
 	{
 		id: "sidebar.bottom",
+		group: "Sidebar",
 		description: "Jump to last file",
 		keys: ["shift+g"],
 		when: inSidebarWithFiles,
@@ -114,6 +133,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	},
 	{
 		id: "sidebar.open",
+		group: "Sidebar",
 		description: "Open file (focus reader)",
 		keys: ["return", "right", "l"],
 		when: inSidebar,
@@ -123,6 +143,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	// Reader
 	{
 		id: "reader.back",
+		group: "Reader",
 		description: "Back to sidebar",
 		keys: ["escape", "left", "h"],
 		when: inReader,
@@ -130,6 +151,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	},
 	{
 		id: "reader.prevFile",
+		group: "Reader",
 		description: "Previous file",
 		keys: ["["],
 		when: inReaderWithFiles,
@@ -137,6 +159,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	},
 	{
 		id: "reader.nextFile",
+		group: "Reader",
 		description: "Next file",
 		keys: ["]"],
 		when: inReaderWithFiles,

@@ -26,6 +26,8 @@ export interface KeyBinding<C> {
 	readonly description: string
 	/** Key chords that trigger this binding, e.g. ["j", "down"], ["shift+k"], ["ctrl+c"]. */
 	readonly keys: readonly string[]
+	/** Optional grouping label for the help overlay. Bindings without a group are excluded from help. */
+	readonly group?: string
 	/** If present, the binding only fires when this returns true. */
 	readonly when?: (ctx: C) => boolean
 	readonly run: (ctx: C) => void
