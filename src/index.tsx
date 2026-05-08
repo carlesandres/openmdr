@@ -8,11 +8,14 @@
  * Discovery, sidebar, theming, and richer Effect wiring all land after this.
  */
 
+import { stat } from "node:fs/promises"
 import { createCliRenderer, parseColor, SyntaxStyle } from "@opentui/core"
 import { createRoot, useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
 import { Effect } from "effect"
 import { useMemo } from "react"
+import { Browser } from "./Browser.tsx"
 import { parseArgv } from "./cli/argv.ts"
+import { walk } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
 
 // Minimal dark theme — straight from opentui's markdown demo (Nord-ish).
@@ -118,23 +121,45 @@ export const App = ({ content, title = "openmdr", onQuit }: AppProps) => {
 
 if (import.meta.main) {
 	const args = parseArgv(Bun.argv.slice(2))
-	if (!args.path) {
-		console.error("usage: openmdr <path-to-markdown-file>")
-		process.exit(2)
-	}
-	const path = args.path
-	const content = await Effect.runPromise(
-		readFileText(path).pipe(
-			Effect.tapError((err) =>
-				Effect.sync(() => {
-					console.error(`openmdr: cannot read ${err.path}: ${String(err.cause)}`)
-				}),
-			),
-		),
-	).catch(() => {
+	const target = args.path ?? "."
+
+	let stats: Awaited<ReturnType<typeof stat>>
+	try {
+		stats = await stat(target)
+	} catch (err) {
+		console.error(`openmdr: cannot access ${target}: ${String(err)}`)
 		process.exit(1)
-	})
-	if (typeof content !== "string") process.exit(1)
+	}
+
 	const renderer = await createCliRenderer({ exitOnCtrlC: false })
-	createRoot(renderer).render(<App content={content} title={path} />)
+
+	if (stats.isDirectory()) {
+		const files = await Effect.runPromise(
+			walk(target).pipe(
+				Effect.tapError((err) =>
+					Effect.sync(() => {
+						console.error(`openmdr: cannot walk ${target}: ${String(err.cause)}`)
+					}),
+				),
+			),
+		).catch(() => {
+			process.exit(1)
+		})
+		if (!Array.isArray(files)) process.exit(1)
+		createRoot(renderer).render(<Browser files={files} title={target} />)
+	} else {
+		const content = await Effect.runPromise(
+			readFileText(target).pipe(
+				Effect.tapError((err) =>
+					Effect.sync(() => {
+						console.error(`openmdr: cannot read ${err.path}: ${String(err.cause)}`)
+					}),
+				),
+			),
+		).catch(() => {
+			process.exit(1)
+		})
+		if (typeof content !== "string") process.exit(1)
+		createRoot(renderer).render(<App content={content} title={target} />)
+	}
 }
