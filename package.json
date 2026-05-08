@@ -22,6 +22,7 @@
 		"@opentui/core": "0.2.1",
 		"@opentui/react": "0.2.1",
 		"effect": "4.0.0-beta.59",
+		"ignore": "^7.0.5",
 		"react": "19.2.5",
 		"scheduler": "0.27.0"
 	},
