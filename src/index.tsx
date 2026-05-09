@@ -14,7 +14,7 @@ import { createRoot, useKeyboard, useRenderer, useTerminalDimensions } from "@op
 import { Effect } from "effect"
 import { useMemo } from "react"
 import { Browser } from "./Browser.tsx"
-import { parseArgv } from "./cli/argv.ts"
+import { parseArgv, usage } from "./cli/argv.ts"
 import { walk } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
 import { colors, setActiveTheme } from "./theme/colors.ts"
@@ -25,11 +25,13 @@ export interface AppProps {
 	readonly content: string
 	/** Optional title shown in the frame border. Defaults to a generic label. */
 	readonly title?: string
+	/** Cap the rendered markdown's width at N columns (left-aligned). Null = fill the pane. */
+	readonly maxWidth?: number | null
 	/** Override quit behavior. Tests pass a spy; the binary uses the default. */
 	readonly onQuit?: () => void
 }
 
-export const App = ({ content, title = "openmdr", onQuit }: AppProps) => {
+export const App = ({ content, title = "openmdr", maxWidth = null, onQuit }: AppProps) => {
 	const renderer = useRenderer()
 	const { width, height } = useTerminalDimensions()
 	const syntaxStyle = useMemo(() => SyntaxStyle.fromStyles(colors.syntax), [])
@@ -75,7 +77,7 @@ export const App = ({ content, title = "openmdr", onQuit }: AppProps) => {
 						fg={colors.text}
 						bg={colors.background}
 						conceal
-						style={{ width: "100%" }}
+						style={{ width: maxWidth ?? "100%" }}
 					/>
 				</scrollbox>
 			</box>
@@ -86,6 +88,16 @@ export const App = ({ content, title = "openmdr", onQuit }: AppProps) => {
 if (import.meta.main) {
 	const args = parseArgv(Bun.argv.slice(2))
 
+	if (args.help) {
+		console.log(usage)
+		process.exit(0)
+	}
+	if (args.version) {
+		const pkg = (await Bun.file(new URL("../package.json", import.meta.url)).json()) as { version: string }
+		console.log(pkg.version)
+		process.exit(0)
+	}
+
 	if (args.theme !== null) {
 		if (!isThemeId(args.theme)) {
 			const known = themeDefinitions.map((t) => t.id).join(", ")
@@ -93,6 +105,16 @@ if (import.meta.main) {
 			process.exit(2)
 		}
 		setActiveTheme(args.theme)
+	}
+
+	let maxWidth: number | null = null
+	if (args.width !== null) {
+		const n = Number.parseInt(args.width, 10)
+		if (!Number.isFinite(n) || n <= 0) {
+			console.error(`openmdr: --width must be a positive integer, got "${args.width}"`)
+			process.exit(2)
+		}
+		maxWidth = n
 	}
 
 	const target = args.path ?? "."
@@ -109,7 +131,7 @@ if (import.meta.main) {
 
 	if (stats.isDirectory()) {
 		const files = await Effect.runPromise(
-			walk(target).pipe(
+			walk(target, { all: args.all }).pipe(
 				Effect.tapError((err) =>
 					Effect.sync(() => {
 						console.error(`openmdr: cannot walk ${target}: ${String(err.cause)}`)
@@ -120,7 +142,7 @@ if (import.meta.main) {
 			process.exit(1)
 		})
 		if (!Array.isArray(files)) process.exit(1)
-		createRoot(renderer).render(<Browser files={files} title={target} />)
+		createRoot(renderer).render(<Browser files={files} title={target} maxWidth={maxWidth} />)
 	} else {
 		const content = await Effect.runPromise(
 			readFileText(target).pipe(
@@ -134,6 +156,6 @@ if (import.meta.main) {
 			process.exit(1)
 		})
 		if (typeof content !== "string") process.exit(1)
-		createRoot(renderer).render(<App content={content} title={target} />)
+		createRoot(renderer).render(<App content={content} title={target} maxWidth={maxWidth} />)
 	}
 }

@@ -25,6 +25,8 @@ export interface BrowserProps {
 	readonly files: readonly FileEntry[]
 	readonly title?: string
 	readonly initialIndex?: number
+	/** Cap the rendered markdown's width at N columns. Null = fill the pane. */
+	readonly maxWidth?: number | null
 	readonly onQuit?: () => void
 	/** Test seam: replaces the file reader. */
 	readonly readFile?: (path: string) => Promise<string>
@@ -38,6 +40,7 @@ export const Browser = ({
 	files,
 	title = "openmdr",
 	initialIndex = 0,
+	maxWidth = null,
 	onQuit,
 	readFile = defaultReadFile,
 }: BrowserProps) => {
@@ -222,7 +225,7 @@ export const Browser = ({
 								fg={colors.text}
 								bg={colors.background}
 								conceal
-								style={{ width: "100%" }}
+								style={{ width: maxWidth ?? "100%" }}
 							/>
 						</scrollbox>
 					)}
