@@ -13,6 +13,7 @@ import { createCliRenderer, SyntaxStyle } from "@opentui/core"
 import { createRoot, useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
 import { Effect } from "effect"
 import { useMemo } from "react"
+import pkg from "../package.json" with { type: "json" }
 import { Browser } from "./Browser.tsx"
 import { parseArgv, usage } from "./cli/argv.ts"
 import { walk } from "./discovery/walk.ts"
@@ -93,7 +94,6 @@ if (import.meta.main) {
 		process.exit(0)
 	}
 	if (args.version) {
-		const pkg = (await Bun.file(new URL("../package.json", import.meta.url)).json()) as { version: string }
 		console.log(pkg.version)
 		process.exit(0)
 	}
