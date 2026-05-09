@@ -17,7 +17,8 @@ import { Browser } from "./Browser.tsx"
 import { parseArgv } from "./cli/argv.ts"
 import { walk } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
-import { colors } from "./theme/colors.ts"
+import { colors, setActiveTheme } from "./theme/colors.ts"
+import { isThemeId, themeDefinitions } from "./theme/registry.ts"
 
 export interface AppProps {
 	/** Markdown source to render. */
@@ -84,6 +85,16 @@ export const App = ({ content, title = "openmdr", onQuit }: AppProps) => {
 
 if (import.meta.main) {
 	const args = parseArgv(Bun.argv.slice(2))
+
+	if (args.theme !== null) {
+		if (!isThemeId(args.theme)) {
+			const known = themeDefinitions.map((t) => t.id).join(", ")
+			console.error(`openmdr: unknown theme "${args.theme}". Known: ${known}`)
+			process.exit(2)
+		}
+		setActiveTheme(args.theme)
+	}
+
 	const target = args.path ?? "."
 
 	let stats: Awaited<ReturnType<typeof stat>>

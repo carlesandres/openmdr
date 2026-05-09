@@ -1,7 +1,7 @@
 import type { StyleDefinitionInput } from "@opentui/core"
 
 /** Registered theme ids. Add a new id here when registering a new theme. */
-export type ThemeId = "dark"
+export type ThemeId = "dark" | "light"
 
 export type ThemeTone = "dark" | "light"
 
