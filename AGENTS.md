@@ -48,37 +48,39 @@ bun run typecheck
 bun run lint
 bun run format
 bun run format:check
-bun run build           # standalone Bun binary at dist/openmdr
-bun run smoke           # exercise the built binary
 bun run dev/bench-markdown.ts <dir>   # microbench
+npm pack --dry-run      # show exactly what would land on npm
 ```
 
 ## Release process
 
-Tag-driven; the cross-target build runs in CI.
+Release-event-driven. Modeled on ghui.
 
 1. Move `[Unreleased]` items in `CHANGELOG.md` under a new
    `## [X.Y.Z] — YYYY-MM-DD` heading; update the link refs at the
    bottom of the file.
 2. Bump `version` in `package.json`.
 3. Commit (`chore: release vX.Y.Z`) — do **not** amend earlier
-   commits.
-4. Tag and push:
+   commits. Push to `main`.
+4. Create a GitHub release at tag `vX.Y.Z` (auto-generated notes are
+   fine; you can curate before publishing):
 
    ```bash
-   git tag vX.Y.Z
-   git push origin main vX.Y.Z
+   gh release create vX.Y.Z --target main --title "vX.Y.Z" \
+     --generate-notes
    ```
 
-5. `.github/workflows/release.yml` runs on five matrix runners
-   (darwin-arm64/x64, linux-arm64/x64, windows-x64), builds + smokes
-   the native binary, uploads `openmdr-<target>.tar.gz` (or `.zip`
-   for windows), then attaches them to a GitHub release with
-   auto-generated notes.
+5. The `release: published` event fires
+   `.github/workflows/publish.yml`, which:
+   - runs `bun run typecheck`,
+   - asserts `v${package.version}` matches `${GITHUB_REF_NAME}`,
+   - runs `npm pack --dry-run`,
+   - runs `npm publish` (Trusted Publisher / OIDC; no `NPM_TOKEN`).
 
-There is no npm or Homebrew distribution yet — see DESIGN.md §10.5.
-Don't add an `NPM_TOKEN`-style secret; if/when npm is added, it
-should use Trusted Publisher (the path ghui uses).
+There is no compiled binary, no Homebrew tap yet — both tracked as
+GitHub issues. Don't add an `NPM_TOKEN`-style secret; the npm-side
+config uses Trusted Publisher with owner `carlesandres`, repo
+`openmdr`, workflow `publish.yml`, environment `npm`.
 
 ## Things that are *not* the right move
 
@@ -90,8 +92,9 @@ should use Trusted Publisher (the path ghui uses).
   re-train muscle memory.
 - Adding `// TODO`s without the `(revisit: <topic>)` form when they
   pair with a §12 entry.
-- Cross-compiling release binaries from one host (opentui's native
-  module discovery breaks). Use the per-OS matrix in `release.yml`.
+- Compiling to a standalone binary as part of the release flow. We
+  ship JS source via npm; the user brings Bun. Binary distribution is
+  a future option tracked as a GH issue, not a near-term move.
 - Amending or force-pushing commits on `main`.
 
 ## Communication

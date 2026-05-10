@@ -46,13 +46,22 @@ will land in the first release.
 
 ### Added — release infra
 
+- Distribution as `@carlesandres/openmdr` on npm (Bun runtime
+  required on user's `PATH`, no compiled binary). Modeled on ghui.
 - `.github/workflows/ci.yml`: typecheck, lint, format:check, test,
-  build, smoke on every push and PR.
-- `.github/workflows/release.yml`: cross-target release workflow. Tag
-  pushes (`v*`) build native binaries on five runners
-  (darwin-arm64/x64, linux-arm64/x64, windows-x64), run smoke on each,
-  and attach the archives to a GitHub release.
+  and `npm pack --dry-run` on every push and PR.
+- `.github/workflows/publish.yml`: `release: published` triggers
+  `npm publish` via Trusted Publisher (OIDC, no token), with a
+  tag-vs-`package.json`-version assertion before publish.
 - `.oxfmtrc.json`: pinned formatting so `format:check` is meaningful.
+
+### Removed (vs an earlier plan in this branch)
+
+- Cross-target `bun --compile` release workflow + `dev/build-standalone.ts`
+  + `dev/smoke.ts`. The bytes-per-user / build-cost trade-off doesn't
+  pay off yet for a project with no real users; revisit when there is
+  concrete demand for "one binary, no Bun required". Tracked as an
+  issue.
 
 ### Added — docs
 

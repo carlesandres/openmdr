@@ -10,20 +10,25 @@ built on [`opentui`](https://github.com/anomalyco/opentui).
 
 ## Install
 
-Requires [Bun](https://bun.sh).
+Requires [Bun](https://bun.sh) on your `PATH` (it's the runtime openmdr ships
+against — there is no compiled binary).
 
 ```bash
-git clone <this repo> && cd openmdr
-bun install
-bun run build           # produces dist/openmdr (~75MB, host platform)
-./dist/openmdr --help
+npm install -g @carlesandres/openmdr
+openmdr --help
 ```
 
-Or run from source:
+Or, from source:
 
 ```bash
+git clone https://github.com/carlesandres/openmdr.git
+cd openmdr
+bun install
 bun run src/index.tsx [path]
 ```
+
+A standalone single-binary distribution (no Bun on `PATH` required) is tracked
+as a future option — see issue [#TBD] / DESIGN.md §10.5.
 
 ## Usage
 
@@ -84,7 +89,8 @@ Press `?` inside the app for the full list. Highlights:
 - Cross-file link following.
 - "Open in `$EDITOR`" and other custom file actions.
 - Live reload, persistent config file, OS-appearance auto-detect.
-- npm and Homebrew distribution.
+- Single-binary distribution (current install requires Bun on `PATH`).
+- Homebrew tap.
 
 **Hard non-goals:** not an editor, not an exporter, not a sync service, not a
 general-purpose pager.
@@ -98,10 +104,10 @@ bun run typecheck        # strict TypeScript
 bun run lint
 bun run format
 
-bun run build            # compile dist/openmdr
-bun run smoke            # exercise the built binary
-
 bun run dev/bench-markdown.ts <dir>   # microbenchmark <markdown> swap cost
+
+# packaging sanity
+npm pack --dry-run       # show what would land on npm
 ```
 
 The full architecture and the rationale for what's deferred are in

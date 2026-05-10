@@ -29,12 +29,11 @@ bun run lint
 bun run format          # write
 bun run format:check    # check (CI uses this)
 
-bun run build           # standalone binary at dist/openmdr
-bun run smoke           # exercise the built binary
+npm pack --dry-run      # show exactly what would ship to npm
 ```
 
 Any PR has to pass `typecheck`, `lint`, `format:check`, `test`, and
-`build` + `smoke` — that's what `.github/workflows/ci.yml` enforces.
+`npm pack --dry-run` — that's what `.github/workflows/ci.yml` enforces.
 
 ## Project layout
 
@@ -99,17 +98,16 @@ one.
 
 ## Release flow
 
-Tag-driven, see `.github/workflows/release.yml`. Steps:
+Release-event-driven. See `.github/workflows/publish.yml` and the more
+detailed step-by-step in `AGENTS.md`. Quick version:
 
-1. Move `[Unreleased]` items in `CHANGELOG.md` under a new
-   `## [X.Y.Z] — YYYY-MM-DD` heading; update the link refs at the bottom.
+1. Move `[Unreleased]` items in `CHANGELOG.md` under a new dated
+   heading; update link refs.
 2. Bump `version` in `package.json`.
-3. Commit (`chore: release vX.Y.Z`), tag, push:
-
-```bash
-git tag vX.Y.Z
-git push origin main vX.Y.Z
-```
+3. Commit + push.
+4. `gh release create vX.Y.Z --target main --title vX.Y.Z --generate-notes`
+   — the workflow takes it from there (`npm publish` via Trusted
+   Publisher).
 
 The release workflow builds on five runners (mac arm64/x64, linux
 arm64/x64, windows x64), runs smoke on each, and attaches archives to
