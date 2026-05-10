@@ -2,17 +2,21 @@
 
 All notable changes to openmdr land here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
-follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) once it
-hits v0.1.0. Until then, breaking changes can land in any release.
+follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from
+v0.1.0 onward.
 
-The release workflow (`.github/workflows/release.yml`) auto-generates GitHub
-release notes from commit subjects when a `v*` tag is pushed; this file is
-the curated, narrative version.
+The publish workflow (`.github/workflows/publish.yml`) runs on the
+`release: published` event, runs `npm publish` via Trusted Publisher,
+and lets GitHub auto-generate release notes from commit subjects; this
+file is the curated, narrative version.
 
 ## [Unreleased]
 
-The v1 MVP is implemented but not yet tagged. Everything below is what
-will land in the first release.
+_No unreleased changes yet._
+
+## [0.1.0] — 2026-05-10
+
+The v1 MVP, published as `@carlesandres/openmdr` on npm.
 
 ### Added — TUI
 
@@ -46,22 +50,14 @@ will land in the first release.
 
 ### Added — release infra
 
-- Distribution as `@carlesandres/openmdr` on npm (Bun runtime
-  required on user's `PATH`, no compiled binary). Modeled on ghui.
+- Distribution as `@carlesandres/openmdr` on npm (Bun runtime required
+  on user's `PATH`, no compiled binary). Modeled on ghui.
 - `.github/workflows/ci.yml`: typecheck, lint, format:check, test,
   and `npm pack --dry-run` on every push and PR.
 - `.github/workflows/publish.yml`: `release: published` triggers
   `npm publish` via Trusted Publisher (OIDC, no token), with a
   tag-vs-`package.json`-version assertion before publish.
 - `.oxfmtrc.json`: pinned formatting so `format:check` is meaningful.
-
-### Removed (vs an earlier plan in this branch)
-
-- Cross-target `bun --compile` release workflow + `dev/build-standalone.ts`
-  + `dev/smoke.ts`. The bytes-per-user / build-cost trade-off doesn't
-  pay off yet for a project with no real users; revisit when there is
-  concrete demand for "one binary, no Bun required". Tracked as an
-  issue.
 
 ### Added — docs
 
@@ -70,7 +66,8 @@ will land in the first release.
   patterns with triggers).
 - `README.md`, `CONTRIBUTING.md`, `AGENTS.md` (cookbook for AI
   assistants), `LICENSE` (MIT).
-- Issue templates (bug + feature + Discussions link), PR template.
+- Issue templates (bug + feature + blank), PR template. All
+  communication routes through GitHub issues.
 
 ### Added — tests
 
@@ -81,6 +78,9 @@ will land in the first release.
 
 Search, stdin, URL fetching, cross-file link following, `$EDITOR`
 hand-off, syntax highlighting, persistent config, OS-appearance
-auto-detect, npm + Homebrew distribution. All tracked.
+auto-detect, single-binary distribution (issue
+[#2](https://github.com/carlesandres/openmdr/issues/2)),
+Homebrew tap. All tracked.
 
-[Unreleased]: https://github.com/carlesandres/openmdr/commits/main
+[Unreleased]: https://github.com/carlesandres/openmdr/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/carlesandres/openmdr/releases/tag/v0.1.0
