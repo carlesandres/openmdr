@@ -12,7 +12,28 @@ file is the curated, narrative version.
 
 ## [Unreleased]
 
-_No unreleased changes yet._
+### Added — themes
+
+- Theme derivation engine (`src/theme/derive.ts`). Each theme provides
+  ~12 anchor values (tone + background + foreground + ANSI-8 + optional
+  muted) and the engine derives the full `ColorPalette` (surface,
+  border, selectedBg, syntax tokens, etc.). Adding a new theme is now
+  a ~22-line file instead of 50 hand-tuned hex values.
+- 12 community themes via `--theme`: `tokyo-night`, `catppuccin`,
+  `rose-pine`, `gruvbox`, `dracula`, `kanagawa`, `one-dark`, `monokai`,
+  `solarized-dark`, `everforest`, `vesper`, `opencode`. Anchors lifted
+  from each upstream's canonical palette.
+- The `--theme` usage line in `--help` is generated from the registry,
+  so adding a theme touches one place.
+
+### Changed
+
+- Built-in `dark` and `light` palettes re-anchored on canonical sources
+  (Nord palette docs and GitHub Primer respectively) and re-derived
+  through the engine. Visible shifts vs the previous hand-tuned
+  palettes: borderActive on dark is now Nord blue rather than cyan,
+  selectedBg is a softer mix, inactive border darkness raised so the
+  inactive pane title reads cleanly.
 
 ## [0.1.0] — 2026-05-10
 

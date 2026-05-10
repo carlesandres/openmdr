@@ -1,7 +1,21 @@
 import type { StyleDefinitionInput } from "@opentui/core"
 
 /** Registered theme ids. Add a new id here when registering a new theme. */
-export type ThemeId = "dark" | "light"
+export type ThemeId =
+	| "dark"
+	| "light"
+	| "tokyo-night"
+	| "catppuccin"
+	| "rose-pine"
+	| "gruvbox"
+	| "dracula"
+	| "kanagawa"
+	| "one-dark"
+	| "monokai"
+	| "solarized-dark"
+	| "everforest"
+	| "vesper"
+	| "opencode"
 
 export type ThemeTone = "dark" | "light"
 
@@ -20,7 +34,7 @@ export interface ColorPalette {
 	readonly textStrong: string
 	/** Muted text (hints, footers, placeholders). */
 	readonly textMuted: string
-	/** Inactive border color. */
+	/** Inactive border color (also used for the inactive pane title text). */
 	readonly border: string
 	/** Active border color, also used as a general accent. */
 	readonly borderActive: string

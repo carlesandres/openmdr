@@ -6,19 +6,42 @@ import { lightPalette } from "../src/theme/light.ts"
 import { getThemeDefinition, isThemeId, themeDefinitions } from "../src/theme/registry.ts"
 
 describe("theme registry", () => {
-	test("ships dark and light", () => {
+	test("ships the dark + light + 12 community themes", () => {
 		const ids = themeDefinitions.map((t) => t.id)
-		expect(ids).toContain("dark")
-		expect(ids).toContain("light")
+		expect(ids).toEqual([
+			"dark",
+			"light",
+			"tokyo-night",
+			"catppuccin",
+			"rose-pine",
+			"gruvbox",
+			"dracula",
+			"kanagawa",
+			"one-dark",
+			"monokai",
+			"solarized-dark",
+			"everforest",
+			"vesper",
+			"opencode",
+		])
 	})
 
-	test("dark and light have matching token shapes (no missing keys)", () => {
+	test("every palette has the same token shape (no missing keys)", () => {
+		const expectedKeys = Object.keys(darkPalette).sort()
+		for (const t of themeDefinitions) {
+			expect(Object.keys(t.colors).sort()).toEqual(expectedKeys)
+		}
+	})
+
+	test("dark and light still have matching token shapes", () => {
 		expect(Object.keys(darkPalette).sort()).toEqual(Object.keys(lightPalette).sort())
 	})
 
 	test("isThemeId narrows known ids", () => {
 		expect(isThemeId("dark")).toBe(true)
 		expect(isThemeId("light")).toBe(true)
+		expect(isThemeId("tokyo-night")).toBe(true)
+		expect(isThemeId("catppuccin")).toBe(true)
 		expect(isThemeId("neon")).toBe(false)
 		expect(isThemeId(42)).toBe(false)
 	})
@@ -26,6 +49,15 @@ describe("theme registry", () => {
 	test("getThemeDefinition returns the right palette", () => {
 		expect(getThemeDefinition("dark").colors).toBe(darkPalette)
 		expect(getThemeDefinition("light").colors).toBe(lightPalette)
+	})
+
+	test("all hex anchors render to valid hex strings", () => {
+		for (const t of themeDefinitions) {
+			expect(t.colors.background).toMatch(/^#[0-9a-fA-F]{6}$/)
+			expect(t.colors.text).toMatch(/^#[0-9a-fA-F]{6}$/)
+			expect(t.colors.borderActive).toMatch(/^#[0-9a-fA-F]{6}$/)
+			expect(t.colors.error).toMatch(/^#[0-9a-fA-F]{6}$/)
+		}
 	})
 })
 

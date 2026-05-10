@@ -75,15 +75,24 @@ export const derivePalette = (input: ThemeInput): ColorPalette => {
 	const { tone, background, foreground, red, green, yellow, blue, magenta, cyan } = input
 	const isDark = tone === "dark"
 
-	const surface = mix(background, foreground, isDark ? 0.07 : 0.05)
+	// Surface is the sidebar / help-overlay background. Lightened from bg
+	// for panel separation, then tinted toward the theme's blue so chrome
+	// carries a hint of theme character (otherwise sidebars look the same
+	// "neutral gray panel" across every theme).
+	const surfaceBase = mix(background, foreground, isDark ? 0.13 : 0.09)
+	const surface = mix(surfaceBase, blue, isDark ? 0.06 : 0.04)
 	// Border doubles as the inactive pane's title text color (opentui has no
 	// separate title color). Mix factors target ~4.5:1 contrast against bg
 	// so the title still reads on the inactive pane.
 	const border = mix(background, foreground, isDark ? 0.5 : 0.55)
 	const muted = input.muted ?? mix(foreground, background, isDark ? 0.45 : 0.4)
 	const selectedBg = mix(background, blue, isDark ? 0.45 : 0.32)
-	const selectedBgInactive = mix(background, foreground, isDark ? 0.12 : 0.1)
-	const textStrong = mix(foreground, isDark ? "#ffffff" : "#000000", 0.15)
+	// Inactive selection — tinted with the theme's accent so each theme's
+	// selection color bleeds through even when the sidebar isn't focused.
+	const selectedBgInactive = mix(background, blue, isDark ? 0.22 : 0.16)
+	// Strong text — emphasized rows and headings in chrome. Pushed further
+	// toward white/black than the body fg for visible weight.
+	const textStrong = mix(foreground, isDark ? "#ffffff" : "#000000", 0.3)
 
 	return {
 		background,
