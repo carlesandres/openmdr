@@ -104,8 +104,12 @@ detailed step-by-step in `AGENTS.md`. Quick version:
 1. Move `[Unreleased]` items in `CHANGELOG.md` under a new dated
    heading; update link refs.
 2. Bump `version` in `package.json`.
-3. Commit + push.
-4. `gh release create vX.Y.Z --target main --title vX.Y.Z --generate-notes`
+3. Branch off `main` (e.g. `release/vX.Y.Z`), commit
+   `chore: release vX.Y.Z`, push, open a PR into `main`. Wait for
+   CI; merge. Direct commits to `main` are blocked by branch
+   protection.
+4. After merge, pull `main` locally, then
+   `gh release create vX.Y.Z --target main --title vX.Y.Z --generate-notes`
    — the workflow takes it from there (`npm publish` via Trusted
    Publisher).
 
