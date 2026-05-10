@@ -1,47 +1,22 @@
+import { derivePalette, type ThemeInput } from "./derive.ts"
 import type { ColorPalette } from "./types.ts"
 
-/** Nord-ish dark palette. */
-export const darkPalette: ColorPalette = {
-	background: "#2E3440",
-	surface: "#3B4252",
-	text: "#D8DEE9",
-	textStrong: "#ECEFF4",
-	textMuted: "#7B8794",
-	border: "#4C566A",
-	borderActive: "#88C0D0",
-	selectedBg: "#5E81AC",
-	selectedBgInactive: "#434C5E",
-	error: "#BF616A",
-	syntax: {
-		keyword: { fg: "#81A1C1", bold: true },
-		string: { fg: "#A3BE8C" },
-		comment: { fg: "#616E88", italic: true },
-		number: { fg: "#B48EAD" },
-		function: { fg: "#88C0D0" },
-		type: { fg: "#8FBCBB" },
-		operator: { fg: "#81A1C1" },
-		variable: { fg: "#D8DEE9" },
-		property: { fg: "#88C0D0" },
-		"punctuation.bracket": { fg: "#ECEFF4" },
-		"punctuation.delimiter": { fg: "#ECEFF4" },
-		"markup.heading": { fg: "#88C0D0", bold: true },
-		"markup.heading.1": { fg: "#8FBCBB", bold: true, underline: true },
-		"markup.heading.2": { fg: "#88C0D0", bold: true },
-		"markup.heading.3": { fg: "#81A1C1" },
-		"markup.bold": { fg: "#ECEFF4", bold: true },
-		"markup.strong": { fg: "#ECEFF4", bold: true },
-		"markup.italic": { fg: "#ECEFF4", italic: true },
-		"markup.list": { fg: "#EBCB8B" },
-		"markup.quote": { fg: "#81A1C1", italic: true },
-		"markup.raw": { fg: "#A3BE8C", bg: "#3B4252" },
-		"markup.raw.block": { fg: "#A3BE8C", bg: "#3B4252" },
-		"markup.raw.inline": { fg: "#A3BE8C", bg: "#3B4252" },
-		"markup.link": { fg: "#88C0D0", underline: true },
-		"markup.link.label": { fg: "#A3BE8C", underline: true },
-		"markup.link.url": { fg: "#88C0D0", underline: true },
-		label: { fg: "#A3BE8C" },
-		conceal: { fg: "#4C566A" },
-		"punctuation.special": { fg: "#616E88" },
-		default: { fg: "#D8DEE9" },
-	},
+/**
+ * Nord — arctic blue-gray surfaces with frosty accents.
+ * Anchors lifted from the canonical Nord palette
+ * (https://www.nordtheme.com/docs/colors-and-palettes).
+ */
+const darkInput: ThemeInput = {
+	tone: "dark",
+	background: "#2E3440", // nord0 (Polar Night)
+	foreground: "#D8DEE9", // nord4 (Snow Storm)
+	red: "#BF616A", // nord11 (Aurora)
+	green: "#A3BE8C", // nord14
+	yellow: "#EBCB8B", // nord13
+	blue: "#5E81AC", // nord10 (Frost — primary)
+	magenta: "#B48EAD", // nord15
+	cyan: "#88C0D0", // nord8 (Frost — secondary)
+	muted: "#616E88", // nord3 brightened — Nord's canonical comment color
 }
+
+export const darkPalette: ColorPalette = derivePalette(darkInput)
