@@ -4,9 +4,11 @@ A TUI-first markdown reader. Open a directory; navigate files in a sidebar;
 read them in a pager. Inspired by [`glow`](https://github.com/charmbracelet/glow);
 built on [`opentui`](https://github.com/anomalyco/opentui).
 
-> **Status:** v1 MVP. Not yet published to npm or Homebrew. The binary builds
-> and runs; the design doc (`DESIGN.md`) explains scope, decisions, and what
-> stays deferred.
+> **Status:** v0.1.0 published to npm as
+> [`@carlesandres/openmdr`](https://www.npmjs.com/package/@carlesandres/openmdr).
+> Bun is required at runtime; there is no standalone binary yet (tracked
+> in [#2](https://github.com/carlesandres/openmdr/issues/2)). The design
+> doc (`DESIGN.md`) explains scope, decisions, and what stays deferred.
 
 ## Install
 
