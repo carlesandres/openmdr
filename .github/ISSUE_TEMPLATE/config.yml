@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Design questions / scope discussion
+    url: https://github.com/carlesandres/openmdr/discussions
+    about: For "should openmdr do X?" or "why is Y the way it is?", start a discussion. The project's scope is in DESIGN.md.
