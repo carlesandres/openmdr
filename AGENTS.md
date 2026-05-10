@@ -54,28 +54,53 @@ npm pack --dry-run      # show exactly what would land on npm
 
 ## Release process
 
-Release-event-driven. Modeled on ghui.
+Release-event-driven. Modeled on ghui, adapted for this repo's
+branch protection (direct commits to `main` are blocked, every change
+goes through a PR).
 
 1. Move `[Unreleased]` items in `CHANGELOG.md` under a new
    `## [X.Y.Z] — YYYY-MM-DD` heading; update the link refs at the
    bottom of the file.
 2. Bump `version` in `package.json`.
-3. Commit (`chore: release vX.Y.Z`) — do **not** amend earlier
-   commits. Push to `main`.
-4. Create a GitHub release at tag `vX.Y.Z` (auto-generated notes are
-   fine; you can curate before publishing):
+3. From `main`, branch off (`git checkout -b release/vX.Y.Z`),
+   commit (`chore: release vX.Y.Z`) — do **not** amend earlier
+   commits — and push the branch.
+4. Open a PR into `main` titled `chore: release vX.Y.Z`. Wait for
+   CI to be green (typecheck + lint + format:check + test +
+   `npm pack --dry-run`). Merge.
+5. Pull `main` locally so the release commit is at `origin/main`'s
+   tip:
+
+   ```bash
+   git checkout main && git pull --ff-only
+   ```
+
+6. Create a GitHub release at tag `vX.Y.Z` (auto-generated notes
+   are fine; you can curate before publishing):
 
    ```bash
    gh release create vX.Y.Z --target main --title "vX.Y.Z" \
      --generate-notes
    ```
 
-5. The `release: published` event fires
+7. The `release: published` event fires
    `.github/workflows/publish.yml`, which:
    - runs `bun run typecheck`,
    - asserts `v${package.version}` matches `${GITHUB_REF_NAME}`,
    - runs `npm pack --dry-run`,
    - runs `npm publish` (Trusted Publisher / OIDC; no `NPM_TOKEN`).
+
+   If the `npm` GitHub environment has required reviewers, the
+   publish job pauses at "Waiting for reviewer" — approve via the
+   run's web page or `gh run view <id> --web`.
+
+8. Watch and verify:
+
+   ```bash
+   gh run list --workflow publish.yml --limit 3
+   gh run watch
+   npm view @carlesandres/openmdr version    # should equal X.Y.Z
+   ```
 
 There is no compiled binary, no Homebrew tap yet — both tracked as
 GitHub issues. Don't add an `NPM_TOKEN`-style secret; the npm-side
