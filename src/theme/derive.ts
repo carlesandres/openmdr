@@ -76,7 +76,10 @@ export const derivePalette = (input: ThemeInput): ColorPalette => {
 	const isDark = tone === "dark"
 
 	const surface = mix(background, foreground, isDark ? 0.07 : 0.05)
-	const border = mix(background, foreground, isDark ? 0.18 : 0.16)
+	// Border doubles as the inactive pane's title text color (opentui has no
+	// separate title color). Mix factors target ~4.5:1 contrast against bg
+	// so the title still reads on the inactive pane.
+	const border = mix(background, foreground, isDark ? 0.5 : 0.55)
 	const muted = input.muted ?? mix(foreground, background, isDark ? 0.45 : 0.4)
 	const selectedBg = mix(background, blue, isDark ? 0.45 : 0.32)
 	const selectedBgInactive = mix(background, foreground, isDark ? 0.12 : 0.1)
