@@ -14,6 +14,10 @@ requests, design questions, scope debates. There is no Discussions tab,
 no Discord, no chat. If you're not sure whether something is a bug or by
 design, open an issue.
 
+If you're an AI assistant pairing on this repo, also read
+[`AGENTS.md`](./AGENTS.md) — it's the cookbook for the moves
+(commands, release process, things-not-to-do).
+
 ## Local loop
 
 ```bash

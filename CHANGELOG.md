@@ -59,7 +59,8 @@ will land in the first release.
 - `DESIGN.md`: foundational design doc (13 sections; §3 non-goals,
   §5.3 deferred, §7.3 reserved keys, §10 v2 gates, §12 deferred
   patterns with triggers).
-- `README.md`, `CONTRIBUTING.md`, `LICENSE` (MIT).
+- `README.md`, `CONTRIBUTING.md`, `AGENTS.md` (cookbook for AI
+  assistants), `LICENSE` (MIT).
 - Issue templates (bug + feature + Discussions link), PR template.
 
 ### Added — tests
