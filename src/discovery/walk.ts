@@ -30,7 +30,11 @@ interface IgnoreLevel {
 	readonly ig: Ignore
 }
 
-const isIgnored = (entryPath: string, isDirectory: boolean, levels: readonly IgnoreLevel[]): boolean => {
+const isIgnored = (
+	entryPath: string,
+	isDirectory: boolean,
+	levels: readonly IgnoreLevel[],
+): boolean => {
 	for (const { dir, ig } of levels) {
 		const rel = relative(dir, entryPath)
 		if (!rel || rel.startsWith("..")) continue
@@ -49,7 +53,9 @@ const tryLoadGitignore = async (dir: string): Promise<Ignore | null> => {
 	}
 }
 
-const sortEntries = <T extends { name: string; isDirectory: () => boolean }>(entries: readonly T[]): T[] =>
+const sortEntries = <T extends { name: string; isDirectory: () => boolean }>(
+	entries: readonly T[],
+): T[] =>
 	[...entries].sort((a, b) => {
 		const aDir = a.isDirectory()
 		const bDir = b.isDirectory()

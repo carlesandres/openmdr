@@ -48,7 +48,9 @@ export const Browser = ({
 	const { width, height } = useTerminalDimensions()
 	const syntaxStyle = useMemo(() => SyntaxStyle.fromStyles(colors.syntax), [])
 
-	const [selectedIndex, setSelectedIndex] = useState(() => clamp(initialIndex, 0, Math.max(0, files.length - 1)))
+	const [selectedIndex, setSelectedIndex] = useState(() =>
+		clamp(initialIndex, 0, Math.max(0, files.length - 1)),
+	)
 	const [content, setContent] = useState<string>("")
 	const [error, setError] = useState<string | null>(null)
 	const [focus, setFocus] = useState<"sidebar" | "reader">("sidebar")
@@ -163,7 +165,14 @@ export const Browser = ({
 
 	return (
 		<box style={{ width, height, flexDirection: "column", backgroundColor: colors.background }}>
-			<box style={{ flexDirection: "row", flexGrow: 1, flexShrink: 1, backgroundColor: colors.background }}>
+			<box
+				style={{
+					flexDirection: "row",
+					flexGrow: 1,
+					flexShrink: 1,
+					backgroundColor: colors.background,
+				}}
+			>
 				{sidebarVisible && (
 					<box
 						title={sidebarTitle}
@@ -185,10 +194,24 @@ export const Browser = ({
 								const isSelected = realIdx === selectedIndex
 								const display = truncatePath(file.relativePath)
 								if (!isSelected) {
-									return <text key={file.path} content={display} wrapMode="none" style={{ fg: colors.text }} />
+									return (
+										<text
+											key={file.path}
+											content={display}
+											wrapMode="none"
+											style={{ fg: colors.text }}
+										/>
+									)
 								}
 								const bg = sidebarActive ? colors.selectedBg : colors.selectedBgInactive
-								return <text key={file.path} content={display} wrapMode="none" style={{ fg: colors.textStrong, bg }} />
+								return (
+									<text
+										key={file.path}
+										content={display}
+										wrapMode="none"
+										style={{ fg: colors.textStrong, bg }}
+									/>
+								)
 							})
 						)}
 					</box>
@@ -232,11 +255,7 @@ export const Browser = ({
 				</box>
 			</box>
 			{helpVisible && (
-				<HelpOverlay
-					bindings={browserBindings}
-					viewportWidth={width}
-					viewportHeight={height}
-				/>
+				<HelpOverlay bindings={browserBindings} viewportWidth={width} viewportHeight={height} />
 			)}
 		</box>
 	)
