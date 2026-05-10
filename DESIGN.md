@@ -76,11 +76,16 @@ v1 ships when:
    emphasis (bold/italic/strike), inline code, links (rendered, not followed),
    images-as-alt-text, horizontal rules, fenced code blocks (plain).
 4. The keymap in §7.2 works end-to-end, including the help overlay.
-5. Dark and light themes auto-detect from terminal background; `--theme` overrides.
+5. Dark and light themes ship; `--theme dark|light` selects (default `dark`).
+   Terminal-background auto-detect is deferred to v2 (§12).
 6. `--width N` controls word-wrap column.
-7. The app builds as a Bun standalone binary and an npm package, with a smoke test
-   on the binary.
+7. The app builds as a Bun standalone binary (host platform) with a smoke test
+   on the binary. npm package and cross-target binaries are deferred to v2 (§10.5).
 8. `README.md` covers install + run; `DESIGN.md` reflects shipped behavior.
+
+**v1 status: shipped** (see `LICENSE`, `README.md`, and the commit log up to and
+including the LICENSE commit). Subsequent work targets §10 v2 gates and §5.3
+deferred features.
 
 There is no performance gate, no coverage gate, and no public release in v1.
 
@@ -172,13 +177,13 @@ Do not bind these in v1:
 
 ### 7.4 Theming
 
-v1 ships **dark + light**, auto-detected from terminal background. Override via
-`--theme dark|light|auto`. A theme is a flat TypeScript object of ~15–20 tokens
-covering: heading colors, body fg/bg, link, code-block bg, blockquote accent, list
-bullets, table borders, hr, selection highlight.
+v1 ships **dark + light** as flat TypeScript objects of ~12 semantic tokens
+(see `src/theme/types.ts`: background, surface, text, textStrong, textMuted,
+border, borderActive, selectedBg, selectedBgInactive, error, syntax). Selection
+is via `--theme dark|light` (default `dark`).
 
-Background detection: prefer OSC 11 via `opentui`'s terminal info; fall back to
-`COLORFGBG`; fall back to dark.
+Terminal-background auto-detect (OSC 11 / `COLORFGBG` / fallback) is **deferred
+to v2** — see §12. Until that lands, users opt in via `--theme`.
 
 Visual direction is **typographic**: generous whitespace, light accents, lots of
 contrast on headings. Glow's dense background-bar style is a workaround for
@@ -206,15 +211,30 @@ and acceptable; refactors-toward-idiomatic-Effect are tracked as work in v1→v2
 
 ### 9.1 Module map
 
+As shipped in v1 (flatter than the original sketch — top-level components live
+directly under `src/` until a second view forces a `tui/` subdir):
+
 ```
 src/
-├── cli/         argv parsing; `openmdr [path]`, `--theme`, `--width`, `--all`, `--help`
-├── discovery/   walk filesystem, apply gitignore, produce a sorted file list
-├── reader/      wraps opentui's <markdown> (and any per-doc state: scroll, theme)
-├── theme/       dark.ts, light.ts, detect.ts, types.ts
-├── tui/         top-level App, Sidebar, Reader, HelpOverlay; keymap wiring
-└── index.tsx    Effect entry point: parse argv, build Layer, hand off to tui
+├── cli/argv.ts            argv parsing + usage string
+├── discovery/walk.ts      filesystem walk, gitignore (root + nested), hard skips
+├── io/readFile.ts         Effect.tryPromise wrapper around fs/promises.readFile
+├── keymap/keymap.ts       KeyBinding<C> + parseChord/dispatch
+├── keymap/browser.ts      browserBindings + BrowserCtx (single source for bindings + help)
+├── theme/types.ts         ColorPalette interface (~12 semantic tokens), ThemeId
+├── theme/dark.ts          Nord-ish dark palette
+├── theme/light.ts         GitHub-Light-leaning palette
+├── theme/registry.ts      themeDefinitions, getThemeDefinition, isThemeId
+├── theme/colors.ts        mutable singleton `colors` + setActiveTheme
+├── Browser.tsx            two-pane component (sidebar + reader, focus, help overlay)
+├── HelpOverlay.tsx        renders KeyBinding[] grouped by group field
+└── index.tsx              entry: parseArgv → stat path → <Browser> or single-file <App>
 ```
+
+A separate `reader/` module did not justify itself in v1: opentui's `<markdown>`
+plus a `<scrollbox>` wrapper is small enough to live inline in `Browser.tsx`
+and the single-file `App` in `index.tsx`. Extracting it is a v2 task once a
+second consumer (e.g., URL-fetched markdown, search-result preview) appears.
 
 ### 9.2 Data flow
 
@@ -299,11 +319,24 @@ A `bun run bench` script checks these against a fixture corpus checked into
 
 ### 10.5 Release / OSS hygiene
 
-- Published to npm, Homebrew tap, GitHub releases (prebuilt binaries:
-  linux/mac/win × x64/arm64).
-- Semver, driven by changesets.
-- CI: typecheck + lint + test on PR; build + publish on tag.
-- Issue & PR templates.
+- **Distribution: npm-only for now.** Published as
+  `@carlesandres/openmdr`; the user must have Bun on `PATH` (Bun is the
+  runtime, no compiled binary). Modeled on ghui's distribution shape.
+  Trigger: GH release `published` event → `publish.yml` runs `npm
+  publish` via Trusted Publisher.
+- **Single-binary distribution is a follow-up**, not a v2 gate. It is
+  attractive (no Bun-on-PATH requirement) but the matrix-build cost and
+  per-OS smoke complexity are real. Tracked as a GitHub issue; revisit
+  when there is concrete user demand for "I want one binary, not
+  npm + bun".
+- **Homebrew tap** still on the list, gated on either npm-only being
+  insufficient or the binary distribution landing first.
+- Semver from v0.1.0 onward; pre-v0.1 may break.
+- Manual `CHANGELOG.md` (Keep-a-Changelog). Changesets remains an
+  option if/when contributors land.
+- CI: typecheck + lint + format:check + test + `npm pack --dry-run` on
+  every PR (`ci.yml`).
+- Issue & PR templates; communication is GitHub issues only.
 - MIT license, single `LICENSE` file.
 
 ## 11. Open Questions

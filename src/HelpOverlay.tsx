@@ -66,7 +66,11 @@ const buildRows = <C,>(bindings: readonly KeyBinding<C>[]): Row[] => {
 	return rows
 }
 
-export const HelpOverlay = <C,>({ bindings, viewportWidth, viewportHeight }: HelpOverlayProps<C>) => {
+export const HelpOverlay = <C,>({
+	bindings,
+	viewportWidth,
+	viewportHeight,
+}: HelpOverlayProps<C>) => {
 	const rows = buildRows(bindings)
 
 	const overlayWidth = Math.min(viewportWidth - 4, 64)
@@ -96,13 +100,29 @@ export const HelpOverlay = <C,>({ bindings, viewportWidth, viewportHeight }: Hel
 			{rows.map((row) => {
 				switch (row.kind) {
 					case "header":
-						return <text key={row.key} wrapMode="none" content={row.text} style={{ fg: colors.borderActive, attributes: 1 /* bold */ }} />
+						return (
+							<text
+								key={row.key}
+								wrapMode="none"
+								content={row.text}
+								style={{ fg: colors.borderActive, attributes: 1 /* bold */ }}
+							/>
+						)
 					case "footer":
-						return <text key={row.key} wrapMode="none" content={row.text} style={{ fg: colors.textMuted }} />
+						return (
+							<text
+								key={row.key}
+								wrapMode="none"
+								content={row.text}
+								style={{ fg: colors.textMuted }}
+							/>
+						)
 					case "spacer":
 						return <text key={row.key} content=" " />
 					case "binding":
-						return <text key={row.key} wrapMode="none" content={row.text} style={{ fg: colors.text }} />
+						return (
+							<text key={row.key} wrapMode="none" content={row.text} style={{ fg: colors.text }} />
+						)
 				}
 			})}
 		</box>

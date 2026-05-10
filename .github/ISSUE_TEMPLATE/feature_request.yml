@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest a feature or change.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please check:
+        - `DESIGN.md` §3 (hard non-goals — these are firm No's)
+        - `DESIGN.md` §5.3 (already on the deferred list)
+        - `DESIGN.md` §12 (patterns we deliberately did not adopt, with their triggers)
+
+        If your request is one of the deferred items, a 👍 on an existing issue
+        helps prioritize. If it's something else, the form below is the place.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can't you do today, or what's awkward?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed shape
+      description: A sketch is enough. Keymap, flag, or UX is fine.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What did you try? What did you reject and why?
+
+  - type: checkboxes
+    id: confirms
+    attributes:
+      label: Sanity checks
+      options:
+        - label: I've read DESIGN.md §3 and this is not in the non-goals list.
+          required: true
+        - label: I've checked DESIGN.md §5.3 and this is not already deferred (or, if it is, I'm offering to help land it).
+          required: true
