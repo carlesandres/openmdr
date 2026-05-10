@@ -9,6 +9,11 @@ Read [`DESIGN.md`](./DESIGN.md) before opening a PR that adds a feature.
 §3 lists hard non-goals, §5.3 lists what's deliberately deferred, and §7.3
 lists keys reserved for v2.
 
+All project communication happens in **GitHub issues** — bugs, feature
+requests, design questions, scope debates. There is no Discussions tab,
+no Discord, no chat. If you're not sure whether something is a bug or by
+design, open an issue.
+
 ## Local loop
 
 ```bash

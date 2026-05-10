@@ -2,7 +2,7 @@
 Thanks for the contribution. A few quick checks before you submit:
 
 - DESIGN.md §3 (non-goals) and §7.3 (reserved keys) are firm.
-- For new features, the proposal already exists as an issue or discussion.
+- For new features, the proposal already exists as an issue.
 - Tests + typecheck + lint + format:check pass locally (`bun test`,
   `bun run typecheck`, `bun run lint`, `bun run format:check`).
 -->
