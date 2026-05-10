@@ -28,7 +28,8 @@ bun run src/index.tsx [path]
 ```
 
 A standalone single-binary distribution (no Bun on `PATH` required) is tracked
-as a future option — see issue [#TBD] / DESIGN.md §10.5.
+as a future option — see issue [#2](https://github.com/carlesandres/openmdr/issues/2)
+and DESIGN.md §10.5.
 
 ## Usage
 
