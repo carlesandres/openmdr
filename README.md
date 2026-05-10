@@ -41,7 +41,7 @@ openmdr [path] [options]
   path           file or directory; defaults to the current directory
 
 options:
-  --theme <id>   color theme: dark, light (default: dark)
+  --theme <id>   color theme (default: dark). See "Themes" below.
   --width <N>    cap rendered markdown width at N columns
   --all          include hidden and gitignored files in discovery
   -h, --help     show this help and exit
@@ -75,6 +75,33 @@ Press `?` inside the app for the full list. Highlights:
 | `?` | Show / dismiss help |
 | `q`, `ctrl+c` | Quit |
 
+## Themes
+
+`--theme <id>` selects the active palette. Default is `dark`.
+
+| ID | Description |
+|---|---|
+| `dark` | Nord-anchored dark (default) |
+| `light` | GitHub Primer-anchored light |
+| `tokyo-night` | Cool indigo with neon editor accents |
+| `catppuccin` | Mocha pastels on a deep base |
+| `rose-pine` | Muted rose, pine, gold on dusky violet |
+| `gruvbox` | Retro warm earth tones |
+| `dracula` | High-contrast purple, pink, cyan, green |
+| `kanagawa` | Ink-wash indigo with autumn accents |
+| `one-dark` | Atom-style charcoal with blue and green accents |
+| `monokai` | Classic dark olive with electric syntax colors |
+| `solarized-dark` | Low-contrast blue-green base with calibrated accents |
+| `everforest` | Soft green-gray forest tones |
+| `vesper` | Minimal black with peach and aqua accents |
+| `opencode` | Charcoal panels with peach, violet, blue highlights |
+
+Themes are derived from each upstream's published anchor palette
+(background, foreground, ANSI-8). Rendering is intentionally not
+pixel-identical to the upstream's editor theme — see `DESIGN.md` and
+`src/theme/derive.ts` for the engine. User-supplied themes are tracked
+as a follow-up.
+
 ## What's in / what's out
 
 **In v1:**
@@ -83,7 +110,8 @@ Press `?` inside the app for the full list. Highlights:
 - Discovery respects `.gitignore` (root + nested), skips `node_modules` /
   `.git` / `.venv`, doesn't follow symlinks.
 - Two-pane layout (sidebar + reader) with a focus model and a help overlay.
-- Dark and light themes via `--theme`.
+- 14 themes via `--theme` (dark, light, plus 12 community palettes — see
+  below).
 
 **Deliberately deferred** (see `DESIGN.md`):
 

@@ -59,12 +59,14 @@ export const parseArgv = (argv: readonly string[]): ParsedArgs => {
 	return { path, theme, width, all, help, version }
 }
 
+import { themeDefinitions } from "../theme/registry.ts"
+
 export const usage = `usage: openmdr [path] [options]
 
   path           file or directory; defaults to the current directory
 
 options:
-  --theme <id>   color theme: dark, light (default: dark)
+  --theme <id>   color theme: ${themeDefinitions.map((t) => t.id).join(", ")} (default: dark)
   --width <N>    cap rendered markdown width at N columns
   --all          include hidden and gitignored files in discovery
   -h, --help     show this help and exit
