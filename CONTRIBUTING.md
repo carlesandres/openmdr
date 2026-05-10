@@ -90,12 +90,16 @@ one.
 
 ## Release flow
 
-Tag-driven, see `.github/workflows/release.yml`:
+Tag-driven, see `.github/workflows/release.yml`. Steps:
+
+1. Move `[Unreleased]` items in `CHANGELOG.md` under a new
+   `## [X.Y.Z] — YYYY-MM-DD` heading; update the link refs at the bottom.
+2. Bump `version` in `package.json`.
+3. Commit (`chore: release vX.Y.Z`), tag, push:
 
 ```bash
-# update package.json version, commit
-git tag v0.1.0
-git push origin v0.1.0
+git tag vX.Y.Z
+git push origin main vX.Y.Z
 ```
 
 The release workflow builds on five runners (mac arm64/x64, linux
