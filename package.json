@@ -1,10 +1,37 @@
 {
-	"name": "openmdr",
+	"name": "@carlesandres/openmdr",
 	"version": "0.0.0",
 	"description": "TUI-first markdown reader on opentui",
 	"type": "module",
 	"license": "MIT",
-	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/carlesandres/openmdr.git"
+	},
+	"bugs": {
+		"url": "https://github.com/carlesandres/openmdr/issues"
+	},
+	"homepage": "https://github.com/carlesandres/openmdr#readme",
+	"keywords": [
+		"markdown",
+		"reader",
+		"terminal",
+		"tui",
+		"bun",
+		"opentui",
+		"glow"
+	],
+	"files": [
+		"src",
+		"README.md",
+		"LICENSE",
+		"CHANGELOG.md"
+	],
+	"publishConfig": {
+		"access": "public",
+		"provenance": true,
+		"registry": "https://registry.npmjs.org/"
+	},
 	"bin": {
 		"openmdr": "src/index.tsx"
 	},
@@ -15,9 +42,7 @@
 		"lint": "oxlint --tsconfig tsconfig.json src/",
 		"format": "oxfmt src/",
 		"format:check": "oxfmt --check src/",
-		"test": "bun test",
-		"build": "bun run dev/build-standalone.ts",
-		"smoke": "bun run dev/smoke.ts"
+		"test": "bun test"
 	},
 	"dependencies": {
 		"@effect/atom-react": "4.0.0-beta.59",
