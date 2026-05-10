@@ -6,9 +6,10 @@
  *   bun run dev/build-standalone.ts             # host target
  *   bun run dev/build-standalone.ts <bunTarget> # explicit target
  *
- * Cross-compile is supported by Bun (--target=bun-darwin-arm64 etc.) but
- * we only build for the host by default. Multi-target release builds and
- * tarballing are deferred to v2 — see DESIGN.md §10.5.
+ * This script always builds for the host. Cross-target release builds run
+ * per-OS in .github/workflows/release.yml — opentui's native module discovery
+ * doesn't cross-compile cleanly from a single host, so each target is built
+ * on its native runner.
  */
 
 import { mkdir, rm } from "node:fs/promises"
@@ -16,10 +17,18 @@ import { join } from "node:path"
 
 const root = process.cwd()
 const outDir = join(root, "dist")
-const outBinary = join(outDir, "openmdr")
+const isWindows = process.platform === "win32"
+const outBinary = join(outDir, isWindows ? "openmdr.exe" : "openmdr")
 
 const hostTarget = (() => {
-	const os = process.platform === "darwin" ? "darwin" : process.platform === "linux" ? "linux" : null
+	const os =
+		process.platform === "darwin"
+			? "darwin"
+			: process.platform === "linux"
+				? "linux"
+				: process.platform === "win32"
+					? "windows"
+					: null
 	const arch = process.arch === "arm64" ? "arm64" : process.arch === "x64" ? "x64" : null
 	if (!os || !arch) {
 		console.error(`unsupported host: ${process.platform}/${process.arch}`)

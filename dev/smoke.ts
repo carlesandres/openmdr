@@ -11,7 +11,11 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 
-const binary = join(process.cwd(), "dist", "openmdr")
+const binary = join(
+	process.cwd(),
+	"dist",
+	process.platform === "win32" ? "openmdr.exe" : "openmdr",
+)
 if (!existsSync(binary)) {
 	console.error(`binary not found at ${binary}; run "bun run build" first`)
 	process.exit(1)
