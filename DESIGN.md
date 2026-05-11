@@ -95,15 +95,26 @@ v2 is when we put the project in front of strangers. The gates are in §10.
 
 ### 5.3 Deferred / future
 
-Tracked here so we don't accidentally bind keys or pour concrete that blocks them:
+Tracked here so we don't accidentally bind keys or pour concrete that blocks them.
+Items marked ★ were confirmed gaps against mdcat / frogmouth / mdr in the
+competitive review (issue #16).
 
 - **Second batch (post-v1):** stdin (`openmdr -`), cross-file link following,
   `$EDITOR` integration, custom per-file actions.
 - **Search:** filename filter, full-text search, fuzzy search across both titles
   and contents.
-- **Networking:** fetch from URL; resolve `github.com/owner/repo` shorthand.
-- **Polish:** syntax highlighting in code blocks, live reload on file change, line
+- **Networking:** fetch from URL; resolve `github.com/owner/repo` shorthand. ★
+- **Polish:** syntax highlighting in code blocks ★, live reload on file change, line
   numbers toggle, mouse polish, persistent config file.
+- **Navigation:** history stack (back/forward across visited files) ★; heading
+  jump / in-document TOC panel ★. Key reservation for these: see §7.3.
+- **Inline images:** render images inline via iTerm2 / Kitty / Sixel protocols
+  where the terminal supports it. ★
+- **OSC 8 hyperlinks:** render Markdown links as terminal-native clickable links
+  on supporting terminals. ★ (higher priority than images — broader terminal
+  support)
+- **Bookmarks:** persist a per-file bookmark list. Prerequisite: persistent config
+  file (issue #13). ★
 - **Theming v2:** user-supplied stylesheets; named theme set (dracula, solarized,
   etc.).
 - **Reusable keymap package** (extracted in the style of `@ghui/keymap`).
@@ -174,6 +185,8 @@ Do not bind these in v1:
 | `e` | Open in `$EDITOR` |
 | `o` | Open externally (browser / Finder / xdg-open) |
 | `r` | Reload current file |
+| `B` | Bookmarks panel |
+| `ctrl+[` / `ctrl+]` | Navigation history back / forward |
 
 ### 7.4 Theming
 
