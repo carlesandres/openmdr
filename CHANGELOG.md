@@ -12,6 +12,8 @@ file is the curated, narrative version.
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-11
+
 ### Added — themes
 
 - **33 bundled JSON themes** selectable via `--theme <id>`: `aura`, `ayu`,
@@ -119,5 +121,6 @@ auto-detect, single-binary distribution (issue
 [#2](https://github.com/carlesandres/openmdr/issues/2)),
 Homebrew tap. All tracked.
 
-[Unreleased]: https://github.com/carlesandres/openmdr/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/carlesandres/openmdr/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/carlesandres/openmdr/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/carlesandres/openmdr/releases/tag/v0.1.0
