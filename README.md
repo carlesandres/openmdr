@@ -17,6 +17,14 @@ npm install -g @carlesandres/openmdr
 bun add -g @carlesandres/openmdr
 ```
 
+## Upgrade
+
+```bash
+npm update -g @carlesandres/openmdr
+# or
+bun add -g @carlesandres/openmdr
+```
+
 ## Usage
 
 ```
