@@ -1,150 +1,95 @@
 # openmdr
 
-A TUI-first markdown reader. Open a directory; navigate files in a sidebar;
-read them in a pager. Inspired by [`glow`](https://github.com/charmbracelet/glow);
-built on [`opentui`](https://github.com/anomalyco/opentui).
+A terminal markdown reader built on [opentui](https://github.com/nicholasgasior/opentui).
+Point it at a directory and navigate its `.md` files without leaving the terminal.
 
-> **Status:** v0.1.0 published to npm as
-> [`@carlesandres/openmdr`](https://www.npmjs.com/package/@carlesandres/openmdr).
-> Bun is required at runtime; there is no standalone binary yet (tracked
-> in [#2](https://github.com/carlesandres/openmdr/issues/2)). The design
-> doc (`DESIGN.md`) explains scope, decisions, and what stays deferred.
+```
+npx @carlesandres/openmdr docs/
+```
+
+Requires [Bun](https://bun.sh) on `PATH`.
 
 ## Install
 
-Requires [Bun](https://bun.sh) on your `PATH` (it's the runtime openmdr ships
-against — there is no compiled binary).
-
 ```bash
 npm install -g @carlesandres/openmdr
-openmdr --help
+# or
+bun add -g @carlesandres/openmdr
 ```
 
-Or, from source:
+## Upgrade
 
 ```bash
-git clone https://github.com/carlesandres/openmdr.git
-cd openmdr
-bun install
-bun run src/index.tsx [path]
+npm update -g @carlesandres/openmdr
+# or
+bun add -g @carlesandres/openmdr
 ```
-
-A standalone single-binary distribution (no Bun on `PATH` required) is tracked
-as a future option — see issue [#2](https://github.com/carlesandres/openmdr/issues/2)
-and DESIGN.md §10.5.
 
 ## Usage
 
 ```
-openmdr [path] [options]
-
-  path           file or directory; defaults to the current directory
-
-options:
-  --theme <id>   color theme (default: dark). See "Themes" below.
-  --width <N>    cap rendered markdown width at N columns
-  --all          include hidden and gitignored files in discovery
-  -h, --help     show this help and exit
-  -v, --version  print version and exit
+openmdr [options] <path>
 ```
 
-Examples:
+`<path>` can be a directory (walks for `.md` files) or a single `.md` file.
 
-```bash
-openmdr                       # browse markdown files in cwd
-openmdr docs                  # browse a specific directory
-openmdr README.md             # render a single file
-openmdr --theme light docs    # light theme
-openmdr --width 80 README.md  # cap content width for readability
-```
+### Options
 
-## Keymap
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--theme <name>` | `opencode` | Starting theme (see list below) |
+| `--tone dark\|light` | `dark` | Starting tone |
 
-Press `?` inside the app for the full list. Highlights:
+## Keys
+
+### Global
 
 | Key | Action |
-|---|---|
-| `j` / `k`, `↑` / `↓` | Move sidebar selection |
-| `shift+j` / `shift+k`, `space` / `b`, `pagedown` / `pageup`, `ctrl+d` / `ctrl+u` | Jump / page through files |
-| `g` / `G` | First / last file |
-| `return`, `l`, `→` | Open file (focus reader) |
-| `escape`, `h`, `←` | Back to sidebar |
-| `[` / `]` | Previous / next file (from reader) |
-| `tab` | Toggle focus between sidebar and reader |
+|-----|--------|
+| `q` / `ctrl+c` | Quit |
+| `tab` | Toggle focus (sidebar ↔ reader) |
 | `\` | Toggle sidebar visibility |
-| `?` | Show / dismiss help |
-| `q`, `ctrl+c` | Quit |
+| `?` | Show / dismiss help overlay |
+| `t` | Next theme |
+| `T` | Previous theme |
+| `L` | Toggle dark / light tone |
+
+### Sidebar
+
+| Key | Action |
+|-----|--------|
+| `j` / `↓` | Move selection down |
+| `k` / `↑` | Move selection up |
+| `J` | Jump down 10 |
+| `K` | Jump up 10 |
+| `space` / `ctrl+d` | Page down |
+| `b` / `ctrl+u` | Page up |
+| `g` | First file |
+| `G` | Last file |
+| `↵` / `→` / `l` | Open file (focus reader) |
+
+### Reader
+
+| Key | Action |
+|-----|--------|
+| `esc` / `←` / `h` | Back to sidebar |
+| `[` | Previous file |
+| `]` | Next file |
 
 ## Themes
 
-`--theme <id>` selects the active palette. Default is `dark`.
+33 built-in themes, all sourced from the
+[opencode](https://github.com/anomalyco/opencode) TUI palette:
 
-| ID | Description |
-|---|---|
-| `dark` | Nord-anchored dark (default) |
-| `light` | GitHub Primer-anchored light |
-| `tokyo-night` | Cool indigo with neon editor accents |
-| `catppuccin` | Mocha pastels on a deep base |
-| `rose-pine` | Muted rose, pine, gold on dusky violet |
-| `gruvbox` | Retro warm earth tones |
-| `dracula` | High-contrast purple, pink, cyan, green |
-| `kanagawa` | Ink-wash indigo with autumn accents |
-| `one-dark` | Atom-style charcoal with blue and green accents |
-| `monokai` | Classic dark olive with electric syntax colors |
-| `solarized-dark` | Low-contrast blue-green base with calibrated accents |
-| `everforest` | Soft green-gray forest tones |
-| `vesper` | Minimal black with peach and aqua accents |
-| `opencode` | Charcoal panels with peach, violet, blue highlights |
+`aura` · `ayu` · `carbonfox` · `catppuccin` · `catppuccin-frappe` ·
+`catppuccin-macchiato` · `cobalt2` · `cursor` · `dracula` · `everforest` ·
+`flexoki` · `github` · `gruvbox` · `kanagawa` · `lucent-orng` · `material` ·
+`matrix` · `mercury` · `monokai` · `nightowl` · `nord` · `one-dark` ·
+`opencode` · `orng` · `osaka-jade` · `palenight` · `rosepine` · `solarized` ·
+`synthwave84` · `tokyonight` · `vercel` · `vesper` · `zenburn`
 
-Themes are derived from each upstream's published anchor palette
-(background, foreground, ANSI-8). Rendering is intentionally not
-pixel-identical to the upstream's editor theme — see `DESIGN.md` and
-`src/theme/derive.ts` for the engine. User-supplied themes are tracked
-as a follow-up.
-
-## What's in / what's out
-
-**In v1:**
-
-- Browse markdown files (`.md`, `.markdown`, `.mdx`) in any directory.
-- Discovery respects `.gitignore` (root + nested), skips `node_modules` /
-  `.git` / `.venv`, doesn't follow symlinks.
-- Two-pane layout (sidebar + reader) with a focus model and a help overlay.
-- 14 themes via `--theme` (dark, light, plus 12 community palettes — see
-  below).
-
-**Deliberately deferred** (see `DESIGN.md`):
-
-- Filename / full-text / fuzzy search.
-- Stdin (`openmdr -`), URL fetching, `github.com/owner/repo` shorthand.
-- Cross-file link following.
-- "Open in `$EDITOR`" and other custom file actions.
-- Live reload, persistent config file, OS-appearance auto-detect.
-- Single-binary distribution (current install requires Bun on `PATH`).
-- Homebrew tap.
-
-**Hard non-goals:** not an editor, not an exporter, not a sync service, not a
-general-purpose pager.
-
-## Development
-
-```bash
-bun run dev              # watch + run from source
-bun test                 # full test suite (currently 75 tests)
-bun run typecheck        # strict TypeScript
-bun run lint
-bun run format
-
-bun run dev/bench-markdown.ts <dir>   # microbenchmark <markdown> swap cost
-
-# packaging sanity
-npm pack --dry-run       # show what would land on npm
-```
-
-The full architecture and the rationale for what's deferred are in
-[`DESIGN.md`](./DESIGN.md). Patterns we deliberately did *not* adopt — and the
-trigger that should bring each one back — live in §12 of the same doc.
+Each theme supports dark and light tones. Cycle with `t` / `T`; toggle tone with `L`.
 
 ## License
 
-MIT.
+MIT
