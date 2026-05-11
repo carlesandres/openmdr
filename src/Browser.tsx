@@ -12,7 +12,7 @@
 
 import { SyntaxStyle } from "@opentui/core"
 import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
-import { useAtomValue } from "@effect/atom-react"
+import { useAtomValue, useAtomSet } from "@effect/atom-react"
 import { Effect } from "effect"
 import { useEffect, useMemo, useState } from "react"
 import { type FileEntry } from "./discovery/walk.ts"
@@ -20,8 +20,9 @@ import { HelpOverlay } from "./HelpOverlay.tsx"
 import { readFileText } from "./io/readFile.ts"
 import { browserBindings, type BrowserCtx } from "./keymap/browser.ts"
 import { dispatch } from "./keymap/keymap.ts"
-import { colors } from "./theme/colors.ts"
+import { colors, setActiveTheme } from "./theme/colors.ts"
 import { themeAtom } from "./theme/atom.ts"
+import { themeDefinitions, getThemeDefinition } from "./theme/registry.ts"
 
 export interface BrowserProps {
 	readonly files: readonly FileEntry[]
@@ -49,6 +50,7 @@ export const Browser = ({
 	const renderer = useRenderer()
 	const { width, height } = useTerminalDimensions()
 	const theme = useAtomValue(themeAtom)
+	const setTheme = useAtomSet(themeAtom)
 	const syntaxStyle = useMemo(() => SyntaxStyle.fromStyles(colors.syntax), [theme])
 
 	const [selectedIndex, setSelectedIndex] = useState(() =>
@@ -60,6 +62,21 @@ export const Browser = ({
 	const [sidebarVisible, setSidebarVisible] = useState<boolean>(true)
 	const [sidebarScroll, setSidebarScroll] = useState<number>(0)
 	const [helpVisible, setHelpVisible] = useState<boolean>(false)
+
+	const cycleTheme = (delta: 1 | -1) => {
+		const idx = themeDefinitions.findIndex((d) => d.id === theme.id)
+		const next = themeDefinitions[(idx + delta + themeDefinitions.length) % themeDefinitions.length]
+		if (!next) return
+		setActiveTheme(next, theme.tone)
+		setTheme({ id: next.id, tone: theme.tone })
+	}
+
+	const toggleTone = () => {
+		const nextTone = theme.tone === "dark" ? "light" : "dark"
+		const def = getThemeDefinition(theme.id)
+		if (def) setActiveTheme(def, nextTone)
+		setTheme({ id: theme.id, tone: nextTone })
+	}
 
 	const selected = files[selectedIndex]
 
@@ -121,6 +138,8 @@ export const Browser = ({
 			setSelectedIndex,
 			setSidebarVisible,
 			setHelpVisible,
+			cycleTheme,
+			toggleTone,
 			quit: () => {
 				if (onQuit) {
 					onQuit()

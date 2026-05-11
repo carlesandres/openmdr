@@ -11,7 +11,7 @@
 import { stat } from "node:fs/promises"
 import { createCliRenderer, SyntaxStyle } from "@opentui/core"
 import { createRoot, useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
-import { RegistryProvider, useAtomValue } from "@effect/atom-react"
+import { RegistryProvider, useAtomSet, useAtomValue } from "@effect/atom-react"
 import { Effect } from "effect"
 import { useMemo } from "react"
 import pkg from "../package.json" with { type: "json" }
@@ -38,7 +38,23 @@ export const App = ({ content, title = "openmdr", maxWidth = null, onQuit }: App
 	const renderer = useRenderer()
 	const { width, height } = useTerminalDimensions()
 	const theme = useAtomValue(themeAtom)
+	const setTheme = useAtomSet(themeAtom)
 	const syntaxStyle = useMemo(() => SyntaxStyle.fromStyles(colors.syntax), [theme])
+
+	const cycleTheme = (delta: 1 | -1) => {
+		const idx = themeDefinitions.findIndex((d) => d.id === theme.id)
+		const next = themeDefinitions[(idx + delta + themeDefinitions.length) % themeDefinitions.length]
+		if (!next) return
+		setActiveTheme(next, theme.tone)
+		setTheme({ id: next.id, tone: theme.tone })
+	}
+
+	const toggleTone = () => {
+		const nextTone = theme.tone === "dark" ? "light" : "dark"
+		const def = getThemeDefinition(theme.id)
+		if (def) setActiveTheme(def, nextTone)
+		setTheme({ id: theme.id, tone: nextTone })
+	}
 
 	useKeyboard((key) => {
 		if (key.name === "q" || (key.ctrl && key.name === "c")) {
@@ -49,6 +65,9 @@ export const App = ({ content, title = "openmdr", maxWidth = null, onQuit }: App
 			renderer?.destroy()
 			process.exit(0)
 		}
+		if (key.name === "t" && !key.shift) cycleTheme(1)
+		if (key.name === "t" && key.shift) cycleTheme(-1)
+		if (key.name === "l" && key.shift) toggleTone()
 	})
 
 	return (
