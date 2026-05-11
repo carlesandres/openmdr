@@ -11,6 +11,7 @@
 import { stat } from "node:fs/promises"
 import { createCliRenderer, SyntaxStyle } from "@opentui/core"
 import { createRoot, useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
+import { RegistryProvider, useAtomValue } from "@effect/atom-react"
 import { Effect } from "effect"
 import { useMemo } from "react"
 import pkg from "../package.json" with { type: "json" }
@@ -19,7 +20,8 @@ import { parseArgv, usage } from "./cli/argv.ts"
 import { walk } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
 import { colors, setActiveTheme } from "./theme/colors.ts"
-import { isThemeId, themeDefinitions } from "./theme/registry.ts"
+import { themeAtom, type ThemeState } from "./theme/atom.ts"
+import { getThemeDefinition, isThemeId, themeDefinitions } from "./theme/registry.ts"
 
 export interface AppProps {
 	/** Markdown source to render. */
@@ -35,7 +37,8 @@ export interface AppProps {
 export const App = ({ content, title = "openmdr", maxWidth = null, onQuit }: AppProps) => {
 	const renderer = useRenderer()
 	const { width, height } = useTerminalDimensions()
-	const syntaxStyle = useMemo(() => SyntaxStyle.fromStyles(colors.syntax), [])
+	const theme = useAtomValue(themeAtom)
+	const syntaxStyle = useMemo(() => SyntaxStyle.fromStyles(colors.syntax), [theme])
 
 	useKeyboard((key) => {
 		if (key.name === "q" || (key.ctrl && key.name === "c")) {
@@ -98,14 +101,23 @@ if (import.meta.main) {
 		process.exit(0)
 	}
 
-	if (args.theme !== null) {
-		if (!isThemeId(args.theme)) {
-			const known = themeDefinitions.map((t) => t.id).join(", ")
-			console.error(`openmdr: unknown theme "${args.theme}". Known: ${known}`)
-			process.exit(2)
-		}
-		setActiveTheme(args.theme)
+	const themeId = args.theme ?? "opencode"
+	if (!isThemeId(themeId)) {
+		const known = themeDefinitions.map((t) => t.id).join(", ")
+		console.error(`openmdr: unknown theme "${themeId}". Known: ${known}`)
+		process.exit(2)
 	}
+	const tone = args.tone ?? "dark"
+	if (tone !== "dark" && tone !== "light") {
+		console.error(`openmdr: --tone must be "dark" or "light", got "${tone}"`)
+		process.exit(2)
+	}
+	const themeDef = getThemeDefinition(themeId)
+	if (themeDef === undefined) {
+		console.error(`openmdr: unknown theme "${themeId}"`)
+		process.exit(2)
+	}
+	setActiveTheme(themeDef, tone)
 
 	let maxWidth: number | null = null
 	if (args.width !== null) {
@@ -128,6 +140,7 @@ if (import.meta.main) {
 	}
 
 	const renderer = await createCliRenderer({ exitOnCtrlC: false })
+	const initialTheme: ThemeState = { id: themeId, tone }
 
 	if (stats.isDirectory()) {
 		const files = await Effect.runPromise(
@@ -142,7 +155,11 @@ if (import.meta.main) {
 			process.exit(1)
 		})
 		if (!Array.isArray(files)) process.exit(1)
-		createRoot(renderer).render(<Browser files={files} title={target} maxWidth={maxWidth} />)
+		createRoot(renderer).render(
+			<RegistryProvider initialValues={[[themeAtom, initialTheme]]}>
+				<Browser files={files} title={target} maxWidth={maxWidth} />
+			</RegistryProvider>,
+		)
 	} else {
 		const content = await Effect.runPromise(
 			readFileText(target).pipe(
@@ -156,6 +173,10 @@ if (import.meta.main) {
 			process.exit(1)
 		})
 		if (typeof content !== "string") process.exit(1)
-		createRoot(renderer).render(<App content={content} title={target} maxWidth={maxWidth} />)
+		createRoot(renderer).render(
+			<RegistryProvider initialValues={[[themeAtom, initialTheme]]}>
+				<App content={content} title={target} maxWidth={maxWidth} />
+			</RegistryProvider>,
+		)
 	}
 }

@@ -4,6 +4,7 @@ import { parseArgv, type ParsedArgs } from "../src/cli/argv.ts"
 const empty: ParsedArgs = {
 	path: null,
 	theme: null,
+	tone: null,
 	width: null,
 	all: false,
 	help: false,
