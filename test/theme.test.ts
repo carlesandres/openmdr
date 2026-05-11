@@ -1,126 +1,126 @@
 import { describe, expect, test } from "bun:test"
 import { colors, setActiveTheme } from "../src/theme/colors.ts"
-import { darkPalette } from "../src/theme/dark.ts"
-import { derivePalette, type ThemeInput } from "../src/theme/derive.ts"
-import { lightPalette } from "../src/theme/light.ts"
 import { getThemeDefinition, isThemeId, themeDefinitions } from "../src/theme/registry.ts"
+import { isThemeJson, resolveColorValue, resolveTheme } from "../src/theme/resolve.ts"
+import type { ThemeJson } from "../src/theme/types.ts"
 
-describe("theme registry", () => {
-	test("ships the dark + light + 12 community themes", () => {
-		const ids = themeDefinitions.map((t) => t.id)
-		expect(ids).toEqual([
-			"dark",
-			"light",
-			"tokyo-night",
-			"catppuccin",
-			"rose-pine",
-			"gruvbox",
-			"dracula",
-			"kanagawa",
-			"one-dark",
-			"monokai",
-			"solarized-dark",
-			"everforest",
-			"vesper",
-			"opencode",
-		])
+const minimalTheme: ThemeJson = {
+	name: "Minimal",
+	defs: { primary: "#abcdef", panel: "#222222" },
+	theme: {
+		primary: "primary",
+		text: { dark: "#ffffff", light: "#000000" },
+		background: { dark: "#111111", light: "#fafafa" },
+		backgroundPanel: "panel",
+	},
+}
+
+describe("isThemeJson", () => {
+	test("accepts an object with a theme object", () => {
+		expect(isThemeJson({ theme: {} })).toBe(true)
+		expect(isThemeJson({ theme: { primary: "#fff" }, defs: {} })).toBe(true)
 	})
-
-	test("every palette has the same token shape (no missing keys)", () => {
-		const expectedKeys = Object.keys(darkPalette).sort()
-		for (const t of themeDefinitions) {
-			expect(Object.keys(t.colors).sort()).toEqual(expectedKeys)
-		}
-	})
-
-	test("dark and light still have matching token shapes", () => {
-		expect(Object.keys(darkPalette).sort()).toEqual(Object.keys(lightPalette).sort())
-	})
-
-	test("isThemeId narrows known ids", () => {
-		expect(isThemeId("dark")).toBe(true)
-		expect(isThemeId("light")).toBe(true)
-		expect(isThemeId("tokyo-night")).toBe(true)
-		expect(isThemeId("catppuccin")).toBe(true)
-		expect(isThemeId("neon")).toBe(false)
-		expect(isThemeId(42)).toBe(false)
-	})
-
-	test("getThemeDefinition returns the right palette", () => {
-		expect(getThemeDefinition("dark").colors).toBe(darkPalette)
-		expect(getThemeDefinition("light").colors).toBe(lightPalette)
-	})
-
-	test("all hex anchors render to valid hex strings", () => {
-		for (const t of themeDefinitions) {
-			expect(t.colors.background).toMatch(/^#[0-9a-fA-F]{6}$/)
-			expect(t.colors.text).toMatch(/^#[0-9a-fA-F]{6}$/)
-			expect(t.colors.borderActive).toMatch(/^#[0-9a-fA-F]{6}$/)
-			expect(t.colors.error).toMatch(/^#[0-9a-fA-F]{6}$/)
-		}
+	test("rejects non-objects and missing theme", () => {
+		expect(isThemeJson(null)).toBe(false)
+		expect(isThemeJson("nope")).toBe(false)
+		expect(isThemeJson({})).toBe(false)
+		expect(isThemeJson({ theme: "string" })).toBe(false)
 	})
 })
 
-describe("derivePalette", () => {
-	const sample: ThemeInput = {
-		tone: "dark",
-		background: "#000000",
-		foreground: "#ffffff",
-		red: "#ff0000",
-		green: "#00ff00",
-		yellow: "#ffff00",
-		blue: "#0000ff",
-		magenta: "#ff00ff",
-		cyan: "#00ffff",
-	}
-
-	test("primary anchors pass through to their semantic slots", () => {
-		const p = derivePalette(sample)
-		expect(p.background).toBe("#000000")
-		expect(p.text).toBe("#ffffff")
-		expect(p.borderActive).toBe("#0000ff") // blue → accent
-		expect(p.error).toBe("#ff0000") // red
+describe("resolveColorValue", () => {
+	test("resolves a hex literal directly", () => {
+		expect(resolveColorValue("#abc", "dark")).toBe("#aabbcc")
+		expect(resolveColorValue("#abcdef", "dark")).toBe("#abcdef")
 	})
-
-	test("syntax tokens map ANSI colors to expected slots", () => {
-		const p = derivePalette(sample)
-		expect(p.syntax["keyword"]).toEqual({ fg: "#0000ff", bold: true })
-		expect(p.syntax["string"]).toEqual({ fg: "#00ff00" })
-		expect(p.syntax["number"]).toEqual({ fg: "#ff00ff" })
-		expect(p.syntax["function"]).toEqual({ fg: "#00ffff" })
-		expect(p.syntax["markup.list"]).toEqual({ fg: "#ffff00" })
+	test("resolves a defs ref via the defs map", () => {
+		expect(resolveColorValue("blue", "dark", { blue: "#0000ff" })).toBe("#0000ff")
 	})
-
-	test("muted is derived when not supplied", () => {
-		const p = derivePalette(sample)
-		expect(p.textMuted).toMatch(/^#[0-9a-f]{6}$/)
-		// Mix of black bg and white fg leans gray; should sit between them.
-		expect(p.textMuted).not.toBe("#000000")
-		expect(p.textMuted).not.toBe("#ffffff")
+	test("resolves a {dark, light} variant for the requested tone", () => {
+		const v = { dark: "#111111", light: "#eeeeee" }
+		expect(resolveColorValue(v, "dark")).toBe("#111111")
+		expect(resolveColorValue(v, "light")).toBe("#eeeeee")
 	})
-
-	test("muted overrides derivation when supplied", () => {
-		const p = derivePalette({ ...sample, muted: "#abcdef" })
-		expect(p.textMuted).toBe("#abcdef")
+	test("returns null for unknown defs refs", () => {
+		expect(resolveColorValue("nope", "dark", {})).toBe(null)
 	})
+})
 
-	test("dark vs light tone changes derived surface contrast", () => {
-		const dark = derivePalette({ ...sample, tone: "dark" })
-		const light = derivePalette({ ...sample, tone: "light" })
-		expect(dark.surface).not.toBe(light.surface)
+describe("resolveTheme", () => {
+	test("populates every token (fallbacks fill missing ones)", () => {
+		const r = resolveTheme({ theme: {} }, "dark")
+		expect(r.background).toMatch(/^#[0-9a-f]{6}$/)
+		expect(r.text).toMatch(/^#[0-9a-f]{6}$/)
+		expect(r.markdownHeading).toMatch(/^#[0-9a-f]{6}$/)
+		expect(r.syntaxKeyword).toMatch(/^#[0-9a-f]{6}$/)
+	})
+	test("uses theme values where provided", () => {
+		const r = resolveTheme(minimalTheme, "dark")
+		expect(r.primary).toBe("#abcdef")
+		expect(r.text).toBe("#ffffff")
+		expect(r.background).toBe("#111111")
+		expect(r.backgroundPanel).toBe("#222222")
+	})
+	test("token-fallback chain: markdownText falls back to text", () => {
+		const r = resolveTheme({ theme: { text: "#aaaaaa" } }, "dark")
+		expect(r.markdownText).toBe("#aaaaaa")
+	})
+	test("tone selection picks the right side of variants", () => {
+		const dark = resolveTheme(minimalTheme, "dark")
+		const light = resolveTheme(minimalTheme, "light")
+		expect(dark.background).toBe("#111111")
+		expect(light.background).toBe("#fafafa")
+	})
+})
+
+describe("registry", () => {
+	test("ships the bundled themes", () => {
+		const ids = themeDefinitions.map((t) => t.id)
+		expect(ids).toContain("nord")
+		expect(ids).toContain("opencode")
+	})
+	test("isThemeId narrows known ids", () => {
+		expect(isThemeId("nord")).toBe(true)
+		expect(isThemeId("opencode")).toBe(true)
+		expect(isThemeId("does-not-exist")).toBe(false)
+		expect(isThemeId(42)).toBe(false)
+	})
+	test("getThemeDefinition returns the definition or undefined", () => {
+		expect(getThemeDefinition("nord")?.id).toBe("nord")
+		expect(getThemeDefinition("nope")).toBeUndefined()
 	})
 })
 
 describe("setActiveTheme", () => {
 	test("mutates the singleton in place; reference stays stable", () => {
 		const ref = colors
-		setActiveTheme("light")
-		expect(colors).toBe(ref) // same reference
-		expect(colors.background).toBe(lightPalette.background)
-		expect(colors.text).toBe(lightPalette.text)
+		const opencode = getThemeDefinition("opencode")!
+		const nord = getThemeDefinition("nord")!
 
-		setActiveTheme("dark")
-		expect(colors.background).toBe(darkPalette.background)
-		expect(colors.text).toBe(darkPalette.text)
+		setActiveTheme(opencode, "dark")
+		const opencodeBg = colors.background
+		expect(colors).toBe(ref)
+
+		setActiveTheme(nord, "dark")
+		expect(colors).toBe(ref)
+		expect(colors.background).not.toBe(opencodeBg)
+	})
+
+	test("tone changes the resolved palette", () => {
+		const nord = getThemeDefinition("nord")!
+		setActiveTheme(nord, "dark")
+		const darkBg = colors.background
+		setActiveTheme(nord, "light")
+		const lightBg = colors.background
+		expect(darkBg).not.toBe(lightBg)
+	})
+
+	test("syntax map is fully populated for any theme", () => {
+		const nord = getThemeDefinition("nord")!
+		setActiveTheme(nord, "dark")
+		expect(colors.syntax["keyword"]).toBeDefined()
+		expect(colors.syntax["markup.heading.1"]).toBeDefined()
+		expect(colors.syntax["markup.raw"]).toBeDefined()
+		expect(colors.syntax["default"]).toBeDefined()
 	})
 })

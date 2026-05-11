@@ -1,56 +1,109 @@
 import type { StyleDefinitionInput } from "@opentui/core"
 
-/** Registered theme ids. Add a new id here when registering a new theme. */
-export type ThemeId =
-	| "dark"
-	| "light"
-	| "tokyo-night"
-	| "catppuccin"
-	| "rose-pine"
-	| "gruvbox"
-	| "dracula"
-	| "kanagawa"
-	| "one-dark"
-	| "monokai"
-	| "solarized-dark"
-	| "everforest"
-	| "vesper"
-	| "opencode"
-
-export type ThemeTone = "dark" | "light"
+export type HexColor = `#${string}`
+export type RefName = string
 
 /**
- * Semantic color tokens. Components reference these names, not raw hex values,
- * so swapping themes is a one-line change at the boot layer.
+ * A token's value. Either a literal hex (`"#abcdef"`), a reference to an
+ * entry in the theme's `defs` block (`"nord8"`), or a `{dark, light}`
+ * variant where each side is itself a hex or a defs ref.
+ */
+export type ColorValue = HexColor | RefName | { readonly dark: string; readonly light: string }
+
+/** Light or dark mode selector. Each theme JSON pairs both. */
+export type Tone = "dark" | "light"
+
+/**
+ * The complete openmdr token surface. Adapted from opencode's TUI theme
+ * (see reference/opencode/.../tui/context/theme/) by dropping the `diff*`
+ * cluster, `backgroundMenu`, and `thinkingOpacity` (none of which are
+ * reachable in a markdown reader).
+ */
+export interface ThemeTokens {
+	// UI semantics
+	readonly primary: ColorValue
+	readonly secondary: ColorValue
+	readonly accent: ColorValue
+	readonly error: ColorValue
+	readonly warning: ColorValue
+	readonly success: ColorValue
+	readonly info: ColorValue
+	readonly text: ColorValue
+	readonly textMuted: ColorValue
+	readonly selectedListItemText?: ColorValue
+	readonly background: ColorValue
+	readonly backgroundPanel: ColorValue
+	readonly backgroundElement: ColorValue
+	readonly border: ColorValue
+	readonly borderActive: ColorValue
+	readonly borderSubtle: ColorValue
+	// Markdown rendering
+	readonly markdownText: ColorValue
+	readonly markdownHeading: ColorValue
+	readonly markdownLink: ColorValue
+	readonly markdownLinkText: ColorValue
+	readonly markdownCode: ColorValue
+	readonly markdownBlockQuote: ColorValue
+	readonly markdownEmph: ColorValue
+	readonly markdownStrong: ColorValue
+	readonly markdownHorizontalRule: ColorValue
+	readonly markdownListItem: ColorValue
+	readonly markdownListEnumeration: ColorValue
+	readonly markdownImage: ColorValue
+	readonly markdownImageText: ColorValue
+	readonly markdownCodeBlock: ColorValue
+	// Fenced-code syntax
+	readonly syntaxComment: ColorValue
+	readonly syntaxKeyword: ColorValue
+	readonly syntaxFunction: ColorValue
+	readonly syntaxVariable: ColorValue
+	readonly syntaxString: ColorValue
+	readonly syntaxNumber: ColorValue
+	readonly syntaxType: ColorValue
+	readonly syntaxOperator: ColorValue
+	readonly syntaxPunctuation: ColorValue
+}
+
+/** Raw on-disk shape for a theme JSON file. */
+export interface ThemeJson {
+	readonly $schema?: string
+	readonly name?: string
+	readonly defs?: Record<string, string>
+	readonly theme: Partial<ThemeTokens>
+}
+
+/** Token names that consumers may reference. */
+export type TokenName = keyof ThemeTokens
+
+/**
+ * Flat record after `resolveTheme`: every token has a concrete `#rrggbb`
+ * value with the requested tone applied and defs refs resolved.
+ */
+export type ResolvedTheme = Readonly<Record<TokenName, HexColor>>
+
+/**
+ * The flat color object consumed by Browser/HelpOverlay/index. Keeps the
+ * existing names (`background`, `surface`, `text`, `syntax`, …) so the
+ * UI files don't all have to change. Values come from
+ * `colors.ts`'s adapter, which maps `ResolvedTheme` → this shape.
  */
 export interface ColorPalette {
-	/** Main reader/page background. */
 	readonly background: string
-	/** Sidebar and modal panels — slightly raised from background. */
 	readonly surface: string
-	/** Default foreground text. */
 	readonly text: string
-	/** Emphasized text (selected rows, headings in chrome). */
 	readonly textStrong: string
-	/** Muted text (hints, footers, placeholders). */
 	readonly textMuted: string
-	/** Inactive border color (also used for the inactive pane title text). */
 	readonly border: string
-	/** Active border color, also used as a general accent. */
 	readonly borderActive: string
-	/** Background of the selected row in the active sidebar. */
 	readonly selectedBg: string
-	/** Background of the selected row when sidebar is not the active pane. */
 	readonly selectedBgInactive: string
-	/** Error text (load failures, etc.). */
 	readonly error: string
-	/** Tree-sitter / markdown syntax styles for opentui's `<markdown>`. */
 	readonly syntax: Record<string, StyleDefinitionInput>
 }
 
+/** Registry entry for a theme; what the loader returns. */
 export interface ThemeDefinition {
-	readonly id: ThemeId
+	readonly id: string
 	readonly name: string
-	readonly tone: ThemeTone
-	readonly colors: ColorPalette
+	readonly source: ThemeJson
 }

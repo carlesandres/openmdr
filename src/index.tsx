@@ -19,7 +19,7 @@ import { parseArgv, usage } from "./cli/argv.ts"
 import { walk } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
 import { colors, setActiveTheme } from "./theme/colors.ts"
-import { isThemeId, themeDefinitions } from "./theme/registry.ts"
+import { getThemeDefinition, isThemeId, themeDefinitions } from "./theme/registry.ts"
 
 export interface AppProps {
 	/** Markdown source to render. */
@@ -98,14 +98,23 @@ if (import.meta.main) {
 		process.exit(0)
 	}
 
-	if (args.theme !== null) {
-		if (!isThemeId(args.theme)) {
-			const known = themeDefinitions.map((t) => t.id).join(", ")
-			console.error(`openmdr: unknown theme "${args.theme}". Known: ${known}`)
-			process.exit(2)
-		}
-		setActiveTheme(args.theme)
+	const themeId = args.theme ?? "opencode"
+	if (!isThemeId(themeId)) {
+		const known = themeDefinitions.map((t) => t.id).join(", ")
+		console.error(`openmdr: unknown theme "${themeId}". Known: ${known}`)
+		process.exit(2)
 	}
+	const tone = args.tone ?? "dark"
+	if (tone !== "dark" && tone !== "light") {
+		console.error(`openmdr: --tone must be "dark" or "light", got "${tone}"`)
+		process.exit(2)
+	}
+	const themeDef = getThemeDefinition(themeId)
+	if (themeDef === undefined) {
+		console.error(`openmdr: unknown theme "${themeId}"`)
+		process.exit(2)
+	}
+	setActiveTheme(themeDef, tone)
 
 	let maxWidth: number | null = null
 	if (args.width !== null) {
