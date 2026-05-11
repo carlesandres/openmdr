@@ -17,6 +17,8 @@ export interface BrowserCtx {
 	readonly setSelectedIndex: (updater: (prev: number) => number) => void
 	readonly setSidebarVisible: (updater: (prev: boolean) => boolean) => void
 	readonly setHelpVisible: (updater: (prev: boolean) => boolean) => void
+	readonly cycleTheme: (delta: 1 | -1) => void
+	readonly toggleTone: () => void
 	readonly quit: () => void
 }
 
@@ -64,6 +66,27 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 		description: "Show / dismiss help",
 		keys: ["?"],
 		run: (c) => c.setHelpVisible((v) => !v),
+	},
+	{
+		id: "theme.next",
+		group: "Global",
+		description: "Next theme",
+		keys: ["t"],
+		run: (c) => c.cycleTheme(1),
+	},
+	{
+		id: "theme.prev",
+		group: "Global",
+		description: "Previous theme",
+		keys: ["shift+t"],
+		run: (c) => c.cycleTheme(-1),
+	},
+	{
+		id: "theme.toneToggle",
+		group: "Global",
+		description: "Toggle dark / light tone",
+		keys: ["shift+l"],
+		run: (c) => c.toggleTone(),
 	},
 
 	// Sidebar
