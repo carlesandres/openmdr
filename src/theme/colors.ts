@@ -13,11 +13,6 @@ import type { ColorPalette, ResolvedTheme, ThemeDefinition, Tone } from "./types
  *   text token in opencode's palette).
  * - `syntax` is a fully populated opentui tree-sitter scope map built from
  *   `markdown*` and `syntax*` tokens.
- *
- * TODO(revisit: live theme switching) — when the app gains a runtime theme
- * picker, calling setActiveTheme alone won't trigger a React re-render (the
- * `colors` reference is unchanged). Pair the call with a top-level "theme
- * version" state that increments on switch.
  */
 const buildPalette = (r: ResolvedTheme): ColorPalette => ({
 	background: r.background,

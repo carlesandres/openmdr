@@ -12,6 +12,7 @@
 
 import { SyntaxStyle } from "@opentui/core"
 import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
+import { useAtomValue } from "@effect/atom-react"
 import { Effect } from "effect"
 import { useEffect, useMemo, useState } from "react"
 import { type FileEntry } from "./discovery/walk.ts"
@@ -20,6 +21,7 @@ import { readFileText } from "./io/readFile.ts"
 import { browserBindings, type BrowserCtx } from "./keymap/browser.ts"
 import { dispatch } from "./keymap/keymap.ts"
 import { colors } from "./theme/colors.ts"
+import { themeAtom } from "./theme/atom.ts"
 
 export interface BrowserProps {
 	readonly files: readonly FileEntry[]
@@ -46,7 +48,8 @@ export const Browser = ({
 }: BrowserProps) => {
 	const renderer = useRenderer()
 	const { width, height } = useTerminalDimensions()
-	const syntaxStyle = useMemo(() => SyntaxStyle.fromStyles(colors.syntax), [])
+	const theme = useAtomValue(themeAtom)
+	const syntaxStyle = useMemo(() => SyntaxStyle.fromStyles(colors.syntax), [theme])
 
 	const [selectedIndex, setSelectedIndex] = useState(() =>
 		clamp(initialIndex, 0, Math.max(0, files.length - 1)),
