@@ -5,6 +5,10 @@ import { testRender } from "@opentui/react/test-utils"
 import { RegistryProvider } from "@effect/atom-react"
 import { Browser } from "../src/Browser.tsx"
 import type { FileEntry } from "../src/discovery/walk.ts"
+import { colors, setActiveTheme } from "../src/theme/colors.ts"
+import { themeAtom } from "../src/theme/atom.ts"
+import { themeDefinitions } from "../src/theme/registry.ts"
+import { resolveTheme } from "../src/theme/resolve.ts"
 
 beforeAll(() => {
 	// @ts-expect-error — globalThis.IS_REACT_ACT_ENVIRONMENT is a React internal
@@ -49,9 +53,19 @@ const stepFrame = async (renderOnce: () => Promise<void>) => {
 	})
 }
 
-/** Wrap a <Browser> element in RegistryProvider so atom hooks resolve. */
-const renderBrowser = (element: React.ReactNode, viewport: { width: number; height: number }) => {
-	const wrapped = React.createElement(RegistryProvider, null, element)
+/** Wrap a <Browser> element in RegistryProvider so atom hooks resolve.
+ *  Pass initialValues to seed atom state (e.g. active theme). */
+const renderBrowser = (
+	element: React.ReactNode,
+	viewport: { width: number; height: number },
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	initialValues?: Iterable<readonly [any, any]>,
+) => {
+	const wrapped = React.createElement(
+		RegistryProvider,
+		{ initialValues } as Parameters<typeof RegistryProvider>[0],
+		element,
+	)
 	return testRender(wrapped, viewport)
 }
 
@@ -682,5 +696,154 @@ describe("Browser — quit", () => {
 			setup!.mockInput.pressCtrlC()
 		})
 		expect(calls).toBe(1)
+	})
+})
+
+describe("Browser — theme cycling", () => {
+	// t / T cycle through themeDefinitions; shift+L toggles tone.
+	// We assert on colors.background and colors.border because they are
+	// reliably distinct across most themes. We pick adjacent theme pairs
+	// that are known to differ in at least one of those tokens.
+
+	// Find two adjacent themes where resolved dark backgrounds differ so tests are stable.
+	const startIdx = (() => {
+		for (let i = 0; i < themeDefinitions.length; i++) {
+			const a = themeDefinitions[i]
+			const b = themeDefinitions[(i + 1) % themeDefinitions.length]
+			if (a && b) {
+				const bgA = resolveTheme(a.source, "dark").background
+				const bgB = resolveTheme(b.source, "dark").background
+				if (bgA !== bgB) return i
+			}
+		}
+		return 0
+	})()
+	const startTheme = themeDefinitions[startIdx]!
+
+	// Seed helper: initialise colors singleton AND atom state to a known theme.
+	const seedTheme = (id: string, tone: "dark" | "light" = "dark") => {
+		const def = themeDefinitions.find((d) => d.id === id)!
+		setActiveTheme(def, tone)
+		return [[themeAtom, { id, tone }]] as Iterable<readonly [any, any]>
+	}
+
+	test("t advances to the next theme (colors.background changes)", async () => {
+		const iv = seedTheme(startTheme.id)
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+				iv,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const before = colors.background
+		await act(async () => {
+			setup!.mockInput.pressKey("t")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		expect(colors.background).not.toBe(before)
+	})
+
+	test("T steps backward (t then T returns to original)", async () => {
+		const iv = seedTheme(startTheme.id)
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+				iv,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const start = colors.background
+
+		// advance one step
+		await act(async () => {
+			setup!.mockInput.pressKey("t")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(colors.background).not.toBe(start)
+
+		// step back — should return to start
+		await act(async () => {
+			setup!.mockInput.pressKey("t", { shift: true })
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(colors.background).toBe(start)
+	})
+
+	test("t wraps around — pressing t themeDefinitions.length times returns to start", async () => {
+		const iv = seedTheme(startTheme.id)
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+				iv,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const start = colors.background
+
+		for (let i = 0; i < themeDefinitions.length; i++) {
+			await act(async () => {
+				setup!.mockInput.pressKey("t")
+			})
+			await stepFrame(setup!.renderOnce)
+		}
+
+		expect(colors.background).toBe(start)
+	})
+
+	test("shift+L toggles tone (colors.background changes)", async () => {
+		// Use the first theme that has a distinct light background to avoid false negatives.
+		const toneTheme = themeDefinitions.find((d) => {
+			const dark = resolveTheme(d.source, "dark")
+			const light = resolveTheme(d.source, "light")
+			return dark.background !== light.background
+		})!
+		const iv = seedTheme(toneTheme.id, "dark")
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+				iv,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const darkBg = colors.background
+		await act(async () => {
+			setup!.mockInput.pressKey("l", { shift: true })
+		})
+		await stepFrame(setup!.renderOnce)
+		const lightBg = colors.background
+		expect(lightBg).not.toBe(darkBg)
+
+		// toggle back — should return to original dark background
+		await act(async () => {
+			setup!.mockInput.pressKey("l", { shift: true })
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(colors.background).toBe(darkBg)
 	})
 })
