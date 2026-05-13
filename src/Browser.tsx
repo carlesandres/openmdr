@@ -40,6 +40,15 @@ const defaultReadFile = (path: string): Promise<string> => Effect.runPromise(rea
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n))
 
+/** Bindings the help overlay lets through. Single source of truth for both
+ *  the keyboard early-return and the footer hint filter. */
+const HELP_ALLOWED_IDS: ReadonlySet<string> = new Set([
+	"help.toggle",
+	"theme.next",
+	"theme.prev",
+	"theme.toneToggle",
+])
+
 export const Browser = ({
 	files,
 	title = "openmdr",
@@ -145,13 +154,7 @@ export const Browser = ({
 				setHelpVisible(() => false)
 				return
 			}
-			const allowedWhileHelp = new Set([
-				"help.toggle",
-				"theme.next",
-				"theme.prev",
-				"theme.toneToggle",
-			])
-			const allowed = browserBindings.filter((b) => allowedWhileHelp.has(b.id))
+			const allowed = browserBindings.filter((b) => HELP_ALLOWED_IDS.has(b.id))
 			const helpCtx: BrowserCtx = {
 				files,
 				focus,
@@ -244,9 +247,7 @@ export const Browser = ({
 	// While the help overlay is open, only the keys it lets through should
 	// appear in the hint row.
 	const footerBindings = helpVisible
-		? browserBindings.filter((b) =>
-				new Set(["help.toggle", "theme.next", "theme.prev", "theme.toneToggle"]).has(b.id),
-			)
+		? browserBindings.filter((b) => HELP_ALLOWED_IDS.has(b.id))
 		: browserBindings
 
 	return (
