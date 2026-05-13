@@ -140,6 +140,30 @@ export const Browser = ({
 		}
 	}, [renderedPath, readFile])
 
+	// One BrowserCtx per render, reused by the keyboard handler and the
+	// footer's `when`-evaluation. Keeping a single object eliminates the
+	// drift risk between the two consumers as BrowserCtx grows.
+	const ctx: BrowserCtx = {
+		files,
+		focus,
+		sidebarVisible,
+		helpVisible,
+		setFocus,
+		setSelectedIndex,
+		setSidebarVisible,
+		setHelpVisible,
+		cycleTheme,
+		toggleTone,
+		quit: () => {
+			if (onQuit) {
+				onQuit()
+				return
+			}
+			renderer?.destroy()
+			process.exit(0)
+		},
+	}
+
 	useKeyboard((key) => {
 		// While help is open, swallow most keys: only ? (toggle), esc
 		// (close), and the theme bindings pass through. Theme keys stay live
@@ -155,41 +179,10 @@ export const Browser = ({
 				return
 			}
 			const allowed = browserBindings.filter((b) => HELP_ALLOWED_IDS.has(b.id))
-			const helpCtx: BrowserCtx = {
-				files,
-				focus,
-				sidebarVisible,
-				helpVisible,
-				setFocus,
-				setSelectedIndex,
-				setSidebarVisible,
-				setHelpVisible,
-				cycleTheme,
-				toggleTone,
-				quit: () => {},
-			}
-			dispatch(allowed, helpCtx, key)
+			// `quit` is never reachable from the allowed set, so passing the
+			// real ctx is safe even though `q` would otherwise exit.
+			dispatch(allowed, ctx, key)
 			return
-		}
-		const ctx: BrowserCtx = {
-			files,
-			focus,
-			sidebarVisible,
-			helpVisible,
-			setFocus,
-			setSelectedIndex,
-			setSidebarVisible,
-			setHelpVisible,
-			cycleTheme,
-			toggleTone,
-			quit: () => {
-				if (onQuit) {
-					onQuit()
-					return
-				}
-				renderer?.destroy()
-				process.exit(0)
-			},
 		}
 		dispatch(browserBindings, ctx, key)
 	})
@@ -228,24 +221,6 @@ export const Browser = ({
 	const truncatePath = (s: string): string =>
 		s.length <= sidebarTextWidth ? s : "…" + s.slice(s.length - sidebarTextWidth + 1)
 
-	// Minimal ctx for the footer: only the fields read by binding `when`
-	// predicates matter; the action callbacks are never invoked here.
-	const footerCtx: BrowserCtx = {
-		files,
-		focus,
-		sidebarVisible,
-		helpVisible,
-		setFocus,
-		setSelectedIndex,
-		setSidebarVisible,
-		setHelpVisible,
-		cycleTheme,
-		toggleTone,
-		quit: () => {},
-	}
-
-	// While the help overlay is open, only the keys it lets through should
-	// appear in the hint row.
 	// While help is open, the `?` key closes the overlay — relabel its hint
 	// so the footer accurately describes what pressing the key will do.
 	const footerBindings = helpVisible
@@ -345,7 +320,7 @@ export const Browser = ({
 					)}
 				</box>
 			</box>
-			<Footer bindings={footerBindings} ctx={footerCtx} width={width} notice={footerNotice} />
+			<Footer bindings={footerBindings} ctx={ctx} width={width} notice={footerNotice} />
 			{helpVisible && (
 				<HelpOverlay bindings={browserBindings} viewportWidth={width} viewportHeight={height} />
 			)}
