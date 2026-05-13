@@ -620,6 +620,37 @@ describe("Browser — help overlay", () => {
 		expect(setup!.captureCharFrame()).not.toContain("Help")
 	})
 
+	test("while help is open, q does not trigger quit", async () => {
+		let quitCount = 0
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {
+						quitCount += 1
+					}}
+				/>,
+				TALL_VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("q")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		expect(quitCount).toBe(0)
+		// Overlay should still be open.
+		expect(setup!.captureCharFrame()).toContain("Help")
+	})
+
 	test("while help is open, j does not move sidebar selection", async () => {
 		const files = makeFiles(["a.md", "b.md"])
 		await act(async () => {

@@ -179,9 +179,11 @@ export const Browser = ({
 				return
 			}
 			const allowed = browserBindings.filter((b) => HELP_ALLOWED_IDS.has(b.id))
-			// `quit` is never reachable from the allowed set, so passing the
-			// real ctx is safe even though `q` would otherwise exit.
-			dispatch(allowed, ctx, key)
+			// Defensive: stub quit even though no allowed binding currently
+			// calls it. Keeps the invariant local to this branch instead of
+			// relying on a future maintainer remembering not to add quit-ish
+			// bindings to HELP_ALLOWED_IDS.
+			dispatch(allowed, { ...ctx, quit: () => {} }, key)
 			return
 		}
 		dispatch(browserBindings, ctx, key)
