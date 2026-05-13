@@ -13,6 +13,7 @@ This file is a tracking layer on top of that.
 
 | Theme | Item | Issue |
 |---|---|---|
+| Chrome | Footer chrome v1 — hunk-style status bar with keymap-derived hints (lands before #22) | [#36](https://github.com/carlesandres/openmdr/issues/36) |
 | Layout | Responsive auto-layout v2 (sidebar visibility + width, `--layout` mode, force-open override) | [#22](https://github.com/carlesandres/openmdr/issues/22) |
 | Sidebar | Tree-style sidebar with collapsible folders | [#14](https://github.com/carlesandres/openmdr/issues/14) |
 | Config | Hierarchical config file (prereq for several deferred features) | [#13](https://github.com/carlesandres/openmdr/issues/13) |
@@ -59,6 +60,13 @@ This file is a tracking layer on top of that.
 | Line numbers toggle | [#28](https://github.com/carlesandres/openmdr/issues/28) |
 | Inline images (iTerm2 / Kitty / Sixel) ★ | [#31](https://github.com/carlesandres/openmdr/issues/31) |
 | OSC 8 hyperlinks for markdown links ★ | [#32](https://github.com/carlesandres/openmdr/issues/32) |
+
+## Chrome (follow-ons)
+
+| Item | Issue |
+|---|---|
+| Footer responsive behavior on tight viewports | [#37](https://github.com/carlesandres/openmdr/issues/37) |
+| Evaluate adding a header chrome (breadcrumb / heading / mode chips) | [#38](https://github.com/carlesandres/openmdr/issues/38) |
 
 ## Theming & keymap
 
