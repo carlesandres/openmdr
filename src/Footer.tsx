@@ -50,16 +50,23 @@ const formatHint = <C,>(b: KeyBinding<C>): string | null => {
 	return `${displayKey(first)}:${b.hint}`
 }
 
-/** Drop hints from the end until the joined string fits within `width`. */
+/** Drop hints from the end until the joined string fits within `width`.
+ *  If not even the first hint fits, fall back to the bare key portion so
+ *  the user still sees a discoverability anchor (e.g. `?` instead of an
+ *  empty row on an 8-column terminal). */
 const fitHints = (hints: readonly string[], width: number): string => {
-	if (width <= 0) return ""
+	if (width <= 0 || hints.length === 0) return ""
 	let acc = ""
 	for (const h of hints) {
 		const next = acc.length === 0 ? h : `${acc}${HINT_SEPARATOR}${h}`
 		if (next.length > width) break
 		acc = next
 	}
-	return acc
+	if (acc.length > 0) return acc
+	// Nothing fit. Render just the first hint's key (everything before `:`)
+	// truncated to width, so the row is never silently blank.
+	const firstKey = hints[0]!.split(":")[0] ?? ""
+	return firstKey.slice(0, width)
 }
 
 export const Footer = <C,>({ bindings, ctx, width, notice }: FooterProps<C>) => {

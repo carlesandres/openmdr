@@ -774,6 +774,28 @@ describe("Browser — footer", () => {
 		expect(frame).not.toContain("q:quit")
 	})
 
+	test("falls back to the first key when no full hint fits", async () => {
+		// Ultra-narrow viewport: nothing like `q:quit` (6 chars) fits within
+		// the usable width (terminal width minus 2 for padding).
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				{ width: 6, height: 12 },
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).not.toContain("q:quit")
+		// At minimum the bare key for the first hint (`q`) should appear so
+		// the row is not silently blank.
+		expect(frame).toContain("q")
+	})
+
 	test("narrows the hint row to help-allowed bindings while help is open", async () => {
 		const TALL_VIEWPORT = { width: 120, height: 50 }
 		await act(async () => {
