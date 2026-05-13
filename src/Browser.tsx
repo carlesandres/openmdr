@@ -16,6 +16,7 @@ import { useAtomValue, useAtomSet } from "@effect/atom-react"
 import { Effect } from "effect"
 import { useEffect, useMemo, useState } from "react"
 import { type FileEntry } from "./discovery/walk.ts"
+import { Footer } from "./Footer.tsx"
 import { HelpOverlay } from "./HelpOverlay.tsx"
 import { readFileText } from "./io/readFile.ts"
 import { browserBindings, type BrowserCtx } from "./keymap/browser.ts"
@@ -62,6 +63,15 @@ export const Browser = ({
 	const [sidebarVisible, setSidebarVisible] = useState<boolean>(true)
 	const [sidebarScroll, setSidebarScroll] = useState<number>(0)
 	const [helpVisible, setHelpVisible] = useState<boolean>(false)
+	const [footerNotice, setFooterNotice] = useState<string | null>(null)
+
+	// Single-slot notice with a 2s TTL. A new notice cancels the pending
+	// timer so the latest message gets its own full window.
+	useEffect(() => {
+		if (footerNotice === null) return
+		const timer = setTimeout(() => setFooterNotice(null), 2000)
+		return () => clearTimeout(timer)
+	}, [footerNotice])
 
 	const cycleTheme = (delta: 1 | -1) => {
 		const idx = themeDefinitions.findIndex((d) => d.id === theme.id)
@@ -69,6 +79,7 @@ export const Browser = ({
 		if (!next) return
 		setActiveTheme(next, theme.tone)
 		setTheme({ id: next.id, tone: theme.tone })
+		setFooterNotice(`theme: ${next.name}`)
 	}
 
 	const toggleTone = () => {
@@ -76,6 +87,7 @@ export const Browser = ({
 		const def = getThemeDefinition(theme.id)
 		if (def) setActiveTheme(def, nextTone)
 		setTheme({ id: theme.id, tone: nextTone })
+		setFooterNotice(`tone: ${nextTone}`)
 	}
 
 	const selected = files[selectedIndex]
@@ -193,7 +205,8 @@ export const Browser = ({
 	// every keystroke re-renders all N file rows even though only the bg of
 	// two of them changed (old + new selected). On a 195-file vault that
 	// dominates the per-keystroke cost.
-	const sidebarBodyHeight = Math.max(1, height - 2) // minus top/bottom border
+	// Footer eats 1 row; sidebar box adds top/bottom borders → -3.
+	const sidebarBodyHeight = Math.max(1, height - 3)
 	const maxScroll = Math.max(0, files.length - sidebarBodyHeight)
 	const desiredScroll = (() => {
 		let s = sidebarScroll
@@ -211,6 +224,30 @@ export const Browser = ({
 	// with a leading ellipsis when the path is too long.
 	const truncatePath = (s: string): string =>
 		s.length <= sidebarTextWidth ? s : "…" + s.slice(s.length - sidebarTextWidth + 1)
+
+	// Minimal ctx for the footer: only the fields read by binding `when`
+	// predicates matter; the action callbacks are never invoked here.
+	const footerCtx: BrowserCtx = {
+		files,
+		focus,
+		sidebarVisible,
+		helpVisible,
+		setFocus,
+		setSelectedIndex,
+		setSidebarVisible,
+		setHelpVisible,
+		cycleTheme,
+		toggleTone,
+		quit: () => {},
+	}
+
+	// While the help overlay is open, only the keys it lets through should
+	// appear in the hint row.
+	const footerBindings = helpVisible
+		? browserBindings.filter((b) =>
+				new Set(["help.toggle", "theme.next", "theme.prev", "theme.toneToggle"]).has(b.id),
+			)
+		: browserBindings
 
 	return (
 		<box style={{ width, height, flexDirection: "column", backgroundColor: colors.background }}>
@@ -303,6 +340,7 @@ export const Browser = ({
 					)}
 				</box>
 			</box>
+			<Footer bindings={footerBindings} ctx={footerCtx} width={width} notice={footerNotice} />
 			{helpVisible && (
 				<HelpOverlay bindings={browserBindings} viewportWidth={width} viewportHeight={height} />
 			)}
