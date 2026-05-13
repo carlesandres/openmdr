@@ -846,4 +846,42 @@ describe("Browser — theme cycling", () => {
 		await stepFrame(setup!.renderOnce)
 		expect(colors.background).toBe(darkBg)
 	})
+
+	test("theme keys still cycle while the help overlay is open", async () => {
+		const iv = seedTheme(startTheme.id)
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+				iv,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		// Open help.
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const start = colors.background
+
+		// t advances while help is open.
+		await act(async () => {
+			setup!.mockInput.pressKey("t")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(colors.background).not.toBe(start)
+
+		// T steps back to the original.
+		await act(async () => {
+			setup!.mockInput.pressKey("t", { shift: true })
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(colors.background).toBe(start)
+	})
 })

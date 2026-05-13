@@ -120,13 +120,40 @@ export const Browser = ({
 	}, [renderedPath, readFile])
 
 	useKeyboard((key) => {
-		// While help is open, swallow most keys: only ? (toggle) and esc
-		// (close) work, so the user can read without driving the UI behind.
+		// While help is open, swallow most keys: only ? (toggle), esc
+		// (close), and the theme bindings pass through. Theme keys stay live
+		// so users can preview palette changes against the overlay itself —
+		// it is the largest theme-painted surface in the app. Everything else
+		// is suppressed so the user can read without driving the UI behind.
 		// This is the one place we step outside the data-driven keymap; the
 		// alternative — adding `when: !c.helpVisible` to every other binding
 		// — would clutter the array. See DESIGN.md §12 (keymap composition).
 		if (helpVisible) {
-			if (key.name === "?" || key.name === "escape") setHelpVisible(false)
+			if (key.name === "escape") {
+				setHelpVisible(() => false)
+				return
+			}
+			const allowedWhileHelp = new Set([
+				"help.toggle",
+				"theme.next",
+				"theme.prev",
+				"theme.toneToggle",
+			])
+			const allowed = browserBindings.filter((b) => allowedWhileHelp.has(b.id))
+			const helpCtx: BrowserCtx = {
+				files,
+				focus,
+				sidebarVisible,
+				helpVisible,
+				setFocus,
+				setSelectedIndex,
+				setSidebarVisible,
+				setHelpVisible,
+				cycleTheme,
+				toggleTone,
+				quit: () => {},
+			}
+			dispatch(allowed, helpCtx, key)
 			return
 		}
 		const ctx: BrowserCtx = {
