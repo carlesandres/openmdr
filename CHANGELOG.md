@@ -12,6 +12,29 @@ file is the curated, narrative version.
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-05-13
+
+### Added
+
+- Footer hint row in the browser pane, generated from the keymap so the
+  visible hints stay in sync with the bindings.
+- `ROADMAP.md` as the single index of planned work; footer/header chrome
+  issues registered there.
+
+### Changed
+
+- Sidebar toggle rebound from `\` to `s`.
+- Help overlay: theme keys (`t` / `T` / `L`) now cycle while the overlay
+  is open; the help hint label switches to `close` while the overlay is
+  showing.
+- `DESIGN.md` §5.3 expanded with competitive-review gaps; keys reserved
+  for history and bookmarks.
+
+### Fixed
+
+- Footer falls back to the bare first key on ultra-narrow viewports.
+- `q` quit is stubbed on the help-open context (regression-tested).
+
 ## [0.2.0] — 2026-05-11
 
 ### Added — themes
@@ -121,6 +144,7 @@ auto-detect, single-binary distribution (issue
 [#2](https://github.com/carlesandres/openmdr/issues/2)),
 Homebrew tap. All tracked.
 
-[Unreleased]: https://github.com/carlesandres/openmdr/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/carlesandres/openmdr/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/carlesandres/openmdr/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/carlesandres/openmdr/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/carlesandres/openmdr/releases/tag/v0.1.0
