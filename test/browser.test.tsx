@@ -357,7 +357,7 @@ describe("Browser — focus", () => {
 })
 
 describe("Browser — sidebar toggle", () => {
-	test("\\ hides the sidebar and shifts focus to the reader", async () => {
+	test("s hides the sidebar and shifts focus to the reader", async () => {
 		await act(async () => {
 			setup = await renderBrowser(
 				<Browser
@@ -372,7 +372,7 @@ describe("Browser — sidebar toggle", () => {
 		expect(setup!.captureCharFrame()).toContain("files")
 
 		await act(async () => {
-			setup!.mockInput.pressKey("\\")
+			setup!.mockInput.pressKey("s")
 		})
 		await stepFrame(setup!.renderOnce)
 
@@ -382,7 +382,7 @@ describe("Browser — sidebar toggle", () => {
 		expect(frame).toContain("▸ a.md")
 	})
 
-	test("pressing \\ again restores the sidebar and focuses it", async () => {
+	test("pressing s again restores the sidebar and focuses it", async () => {
 		await act(async () => {
 			setup = await renderBrowser(
 				<Browser
@@ -396,11 +396,11 @@ describe("Browser — sidebar toggle", () => {
 		await stepFrame(setup!.renderOnce)
 
 		await act(async () => {
-			setup!.mockInput.pressKey("\\")
+			setup!.mockInput.pressKey("s")
 		})
 		await stepFrame(setup!.renderOnce)
 		await act(async () => {
-			setup!.mockInput.pressKey("\\")
+			setup!.mockInput.pressKey("s")
 		})
 		await stepFrame(setup!.renderOnce)
 
@@ -620,6 +620,37 @@ describe("Browser — help overlay", () => {
 		expect(setup!.captureCharFrame()).not.toContain("Help")
 	})
 
+	test("while help is open, q does not trigger quit", async () => {
+		let quitCount = 0
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {
+						quitCount += 1
+					}}
+				/>,
+				TALL_VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("q")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		expect(quitCount).toBe(0)
+		// Overlay should still be open.
+		expect(setup!.captureCharFrame()).toContain("Help")
+	})
+
 	test("while help is open, j does not move sidebar selection", async () => {
 		const files = makeFiles(["a.md", "b.md"])
 		await act(async () => {
@@ -696,6 +727,134 @@ describe("Browser — quit", () => {
 			setup!.mockInput.pressCtrlC()
 		})
 		expect(calls).toBe(1)
+	})
+})
+
+describe("Browser — footer", () => {
+	test("renders global + sidebar hints when sidebar is focused", async () => {
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).toContain("q:quit")
+		expect(frame).toContain("?:help")
+		expect(frame).toContain("s:sidebar")
+		// sidebar.open hint surfaces because focus starts on sidebar.
+		expect(frame).toContain("↵:open")
+		// reader-only hints are absent.
+		expect(frame).not.toContain("[:prev")
+		expect(frame).not.toContain("]:next")
+	})
+
+	test("switches to reader-specific hints when focus moves to the reader", async () => {
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressTab()
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).toContain("esc:back")
+		expect(frame).toContain("[:prev")
+		expect(frame).toContain("]:next")
+		expect(frame).not.toContain("↵:open")
+	})
+
+	test("notice replaces hints after a theme cycle", async () => {
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(setup!.captureCharFrame()).toContain("q:quit")
+
+		await act(async () => {
+			setup!.mockInput.pressKey("t")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).toContain("theme:")
+		// hint row is replaced while the notice is live.
+		expect(frame).not.toContain("q:quit")
+	})
+
+	test("falls back to the first key when no full hint fits", async () => {
+		// Ultra-narrow viewport: nothing like `q:quit` (6 chars) fits within
+		// the usable width (terminal width minus 2 for padding).
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				{ width: 6, height: 12 },
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).not.toContain("q:quit")
+		// At minimum the bare key for the first hint (`q`) should appear so
+		// the row is not silently blank.
+		expect(frame).toContain("q")
+	})
+
+	test("narrows the hint row to help-allowed bindings while help is open", async () => {
+		const TALL_VIEWPORT = { width: 120, height: 50 }
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				TALL_VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		// help-allowed hints survive; `?` is relabeled "close" since pressing
+		// it now closes the overlay.
+		expect(frame).toContain("?:close")
+		expect(frame).not.toContain("?:help")
+		expect(frame).toContain("t:theme")
+		// suppressed bindings disappear from the row.
+		expect(frame).not.toContain("q:quit")
+		expect(frame).not.toContain("s:sidebar")
 	})
 })
 
@@ -845,5 +1004,43 @@ describe("Browser — theme cycling", () => {
 		})
 		await stepFrame(setup!.renderOnce)
 		expect(colors.background).toBe(darkBg)
+	})
+
+	test("theme keys still cycle while the help overlay is open", async () => {
+		const iv = seedTheme(startTheme.id)
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+				iv,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		// Open help.
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const start = colors.background
+
+		// t advances while help is open.
+		await act(async () => {
+			setup!.mockInput.pressKey("t")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(colors.background).not.toBe(start)
+
+		// T steps back to the original.
+		await act(async () => {
+			setup!.mockInput.pressKey("t", { shift: true })
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(colors.background).toBe(start)
 	})
 })

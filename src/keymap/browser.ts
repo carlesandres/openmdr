@@ -39,11 +39,19 @@ const inReaderWithFiles = (c: BrowserCtx) => inReader(c) && haveFiles(c)
 
 export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	// Global
-	{ id: "quit", group: "Global", description: "Quit", keys: ["q", "ctrl+c"], run: (c) => c.quit() },
+	{
+		id: "quit",
+		group: "Global",
+		description: "Quit",
+		hint: "quit",
+		keys: ["q", "ctrl+c"],
+		run: (c) => c.quit(),
+	},
 	{
 		id: "focus.toggle",
 		group: "Global",
 		description: "Toggle focus (sidebar ↔ reader)",
+		hint: "focus",
 		keys: ["tab"],
 		run: (c) => c.setFocus((f) => (f === "sidebar" ? "reader" : "sidebar")),
 	},
@@ -51,7 +59,8 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 		id: "sidebar.toggle",
 		group: "Global",
 		description: "Toggle sidebar visibility",
-		keys: ["\\"],
+		hint: "sidebar",
+		keys: ["s"],
 		run: (c) => {
 			const willHide = c.sidebarVisible
 			c.setSidebarVisible((v) => !v)
@@ -64,6 +73,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 		id: "help.toggle",
 		group: "Global",
 		description: "Show / dismiss help",
+		hint: "help",
 		keys: ["?"],
 		run: (c) => c.setHelpVisible((v) => !v),
 	},
@@ -71,6 +81,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 		id: "theme.next",
 		group: "Global",
 		description: "Next theme",
+		hint: "theme",
 		keys: ["t"],
 		run: (c) => c.cycleTheme(1),
 	},
@@ -158,6 +169,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 		id: "sidebar.open",
 		group: "Sidebar",
 		description: "Open file (focus reader)",
+		hint: "open",
 		keys: ["return", "right", "l"],
 		when: inSidebar,
 		run: (c) => c.setFocus("reader"),
@@ -168,6 +180,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 		id: "reader.back",
 		group: "Reader",
 		description: "Back to sidebar",
+		hint: "back",
 		keys: ["escape", "left", "h"],
 		when: inReader,
 		run: (c) => c.setFocus("sidebar"),
@@ -175,7 +188,8 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 	{
 		id: "reader.prevFile",
 		group: "Reader",
-		description: "Previous file",
+		description: "Prev file",
+		hint: "prev",
 		keys: ["["],
 		when: inReaderWithFiles,
 		run: (c) => stepBy(c, -1),
@@ -184,6 +198,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 		id: "reader.nextFile",
 		group: "Reader",
 		description: "Next file",
+		hint: "next",
 		keys: ["]"],
 		when: inReaderWithFiles,
 		run: (c) => stepBy(c, 1),

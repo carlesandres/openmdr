@@ -16,6 +16,7 @@ import { useAtomValue, useAtomSet } from "@effect/atom-react"
 import { Effect } from "effect"
 import { useEffect, useMemo, useState } from "react"
 import { type FileEntry } from "./discovery/walk.ts"
+import { Footer, FOOTER_HEIGHT } from "./Footer.tsx"
 import { HelpOverlay } from "./HelpOverlay.tsx"
 import { readFileText } from "./io/readFile.ts"
 import { browserBindings, type BrowserCtx } from "./keymap/browser.ts"
@@ -38,6 +39,15 @@ export interface BrowserProps {
 const defaultReadFile = (path: string): Promise<string> => Effect.runPromise(readFileText(path))
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n))
+
+/** Bindings the help overlay lets through. Single source of truth for both
+ *  the keyboard early-return and the footer hint filter. */
+const HELP_ALLOWED_IDS: ReadonlySet<string> = new Set([
+	"help.toggle",
+	"theme.next",
+	"theme.prev",
+	"theme.toneToggle",
+])
 
 export const Browser = ({
 	files,
@@ -62,6 +72,15 @@ export const Browser = ({
 	const [sidebarVisible, setSidebarVisible] = useState<boolean>(true)
 	const [sidebarScroll, setSidebarScroll] = useState<number>(0)
 	const [helpVisible, setHelpVisible] = useState<boolean>(false)
+	const [footerNotice, setFooterNotice] = useState<string | null>(null)
+
+	// Single-slot notice with a 2s TTL. A new notice cancels the pending
+	// timer so the latest message gets its own full window.
+	useEffect(() => {
+		if (footerNotice === null) return
+		const timer = setTimeout(() => setFooterNotice(null), 2000)
+		return () => clearTimeout(timer)
+	}, [footerNotice])
 
 	const cycleTheme = (delta: 1 | -1) => {
 		const idx = themeDefinitions.findIndex((d) => d.id === theme.id)
@@ -69,6 +88,7 @@ export const Browser = ({
 		if (!next) return
 		setActiveTheme(next, theme.tone)
 		setTheme({ id: next.id, tone: theme.tone })
+		setFooterNotice(`theme: ${next.name}`)
 	}
 
 	const toggleTone = () => {
@@ -76,6 +96,7 @@ export const Browser = ({
 		const def = getThemeDefinition(theme.id)
 		if (def) setActiveTheme(def, nextTone)
 		setTheme({ id: theme.id, tone: nextTone })
+		setFooterNotice(`tone: ${nextTone}`)
 	}
 
 	const selected = files[selectedIndex]
@@ -119,35 +140,51 @@ export const Browser = ({
 		}
 	}, [renderedPath, readFile])
 
+	// One BrowserCtx per render, reused by the keyboard handler and the
+	// footer's `when`-evaluation. Keeping a single object eliminates the
+	// drift risk between the two consumers as BrowserCtx grows.
+	const ctx: BrowserCtx = {
+		files,
+		focus,
+		sidebarVisible,
+		helpVisible,
+		setFocus,
+		setSelectedIndex,
+		setSidebarVisible,
+		setHelpVisible,
+		cycleTheme,
+		toggleTone,
+		quit: () => {
+			if (onQuit) {
+				onQuit()
+				return
+			}
+			renderer?.destroy()
+			process.exit(0)
+		},
+	}
+
 	useKeyboard((key) => {
-		// While help is open, swallow most keys: only ? (toggle) and esc
-		// (close) work, so the user can read without driving the UI behind.
+		// While help is open, swallow most keys: only ? (toggle), esc
+		// (close), and the theme bindings pass through. Theme keys stay live
+		// so users can preview palette changes against the overlay itself —
+		// it is the largest theme-painted surface in the app. Everything else
+		// is suppressed so the user can read without driving the UI behind.
 		// This is the one place we step outside the data-driven keymap; the
 		// alternative — adding `when: !c.helpVisible` to every other binding
 		// — would clutter the array. See DESIGN.md §12 (keymap composition).
 		if (helpVisible) {
-			if (key.name === "?" || key.name === "escape") setHelpVisible(false)
+			if (key.name === "escape") {
+				setHelpVisible(() => false)
+				return
+			}
+			const allowed = browserBindings.filter((b) => HELP_ALLOWED_IDS.has(b.id))
+			// Defensive: stub quit even though no allowed binding currently
+			// calls it. Keeps the invariant local to this branch instead of
+			// relying on a future maintainer remembering not to add quit-ish
+			// bindings to HELP_ALLOWED_IDS.
+			dispatch(allowed, { ...ctx, quit: () => {} }, key)
 			return
-		}
-		const ctx: BrowserCtx = {
-			files,
-			focus,
-			sidebarVisible,
-			helpVisible,
-			setFocus,
-			setSelectedIndex,
-			setSidebarVisible,
-			setHelpVisible,
-			cycleTheme,
-			toggleTone,
-			quit: () => {
-				if (onQuit) {
-					onQuit()
-					return
-				}
-				renderer?.destroy()
-				process.exit(0)
-			},
 		}
 		dispatch(browserBindings, ctx, key)
 	})
@@ -166,7 +203,8 @@ export const Browser = ({
 	// every keystroke re-renders all N file rows even though only the bg of
 	// two of them changed (old + new selected). On a 195-file vault that
 	// dominates the per-keystroke cost.
-	const sidebarBodyHeight = Math.max(1, height - 2) // minus top/bottom border
+	// Sidebar box adds top/bottom borders (2); footer eats FOOTER_HEIGHT.
+	const sidebarBodyHeight = Math.max(1, height - 2 - FOOTER_HEIGHT)
 	const maxScroll = Math.max(0, files.length - sidebarBodyHeight)
 	const desiredScroll = (() => {
 		let s = sidebarScroll
@@ -184,6 +222,14 @@ export const Browser = ({
 	// with a leading ellipsis when the path is too long.
 	const truncatePath = (s: string): string =>
 		s.length <= sidebarTextWidth ? s : "…" + s.slice(s.length - sidebarTextWidth + 1)
+
+	// While help is open, the `?` key closes the overlay — relabel its hint
+	// so the footer accurately describes what pressing the key will do.
+	const footerBindings = helpVisible
+		? browserBindings
+				.filter((b) => HELP_ALLOWED_IDS.has(b.id))
+				.map((b) => (b.id === "help.toggle" ? { ...b, hint: "close" } : b))
+		: browserBindings
 
 	return (
 		<box style={{ width, height, flexDirection: "column", backgroundColor: colors.background }}>
@@ -276,6 +322,7 @@ export const Browser = ({
 					)}
 				</box>
 			</box>
+			<Footer bindings={footerBindings} ctx={ctx} width={width} notice={footerNotice} />
 			{helpVisible && (
 				<HelpOverlay bindings={browserBindings} viewportWidth={width} viewportHeight={height} />
 			)}

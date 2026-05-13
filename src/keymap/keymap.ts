@@ -28,6 +28,10 @@ export interface KeyBinding<C> {
 	readonly keys: readonly string[]
 	/** Optional grouping label for the help overlay. Bindings without a group are excluded from help. */
 	readonly group?: string
+	/** Optional compact label for the footer hint row, e.g. "help" for `?:help`.
+	 *  Bindings without a hint are excluded from the footer. Order in the bindings
+	 *  array drives overflow priority (later bindings get truncated first). */
+	readonly hint?: string
 	/** If present, the binding only fires when this returns true. */
 	readonly when?: (ctx: C) => boolean
 	readonly run: (ctx: C) => void
