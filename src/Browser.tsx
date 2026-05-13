@@ -16,7 +16,7 @@ import { useAtomValue, useAtomSet } from "@effect/atom-react"
 import { Effect } from "effect"
 import { useEffect, useMemo, useState } from "react"
 import { type FileEntry } from "./discovery/walk.ts"
-import { Footer } from "./Footer.tsx"
+import { Footer, FOOTER_HEIGHT } from "./Footer.tsx"
 import { HelpOverlay } from "./HelpOverlay.tsx"
 import { readFileText } from "./io/readFile.ts"
 import { browserBindings, type BrowserCtx } from "./keymap/browser.ts"
@@ -208,8 +208,8 @@ export const Browser = ({
 	// every keystroke re-renders all N file rows even though only the bg of
 	// two of them changed (old + new selected). On a 195-file vault that
 	// dominates the per-keystroke cost.
-	// Footer eats 1 row; sidebar box adds top/bottom borders → -3.
-	const sidebarBodyHeight = Math.max(1, height - 3)
+	// Sidebar box adds top/bottom borders (2); footer eats FOOTER_HEIGHT.
+	const sidebarBodyHeight = Math.max(1, height - 2 - FOOTER_HEIGHT)
 	const maxScroll = Math.max(0, files.length - sidebarBodyHeight)
 	const desiredScroll = (() => {
 		let s = sidebarScroll
@@ -246,8 +246,12 @@ export const Browser = ({
 
 	// While the help overlay is open, only the keys it lets through should
 	// appear in the hint row.
+	// While help is open, the `?` key closes the overlay — relabel its hint
+	// so the footer accurately describes what pressing the key will do.
 	const footerBindings = helpVisible
-		? browserBindings.filter((b) => HELP_ALLOWED_IDS.has(b.id))
+		? browserBindings
+				.filter((b) => HELP_ALLOWED_IDS.has(b.id))
+				.map((b) => (b.id === "help.toggle" ? { ...b, hint: "close" } : b))
 		: browserBindings
 
 	return (

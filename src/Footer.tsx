@@ -11,6 +11,10 @@
 import type { KeyBinding } from "./keymap/keymap.ts"
 import { colors } from "./theme/colors.ts"
 
+/** Rows the Footer occupies. Importers use it for layout math so a future
+ *  taller footer doesn't require touching two files. */
+export const FOOTER_HEIGHT = 1
+
 export interface FooterProps<C> {
 	readonly bindings: readonly KeyBinding<C>[]
 	readonly ctx: C
@@ -77,7 +81,7 @@ export const Footer = <C,>({ bindings, ctx, width, notice }: FooterProps<C>) => 
 		<box
 			style={{
 				width,
-				height: 1,
+				height: FOOTER_HEIGHT,
 				flexShrink: 0,
 				flexDirection: "row",
 				paddingLeft: 1,

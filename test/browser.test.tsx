@@ -794,8 +794,10 @@ describe("Browser — footer", () => {
 		await stepFrame(setup!.renderOnce)
 
 		const frame = setup!.captureCharFrame()
-		// help-allowed hints survive.
-		expect(frame).toContain("?:help")
+		// help-allowed hints survive; `?` is relabeled "close" since pressing
+		// it now closes the overlay.
+		expect(frame).toContain("?:close")
+		expect(frame).not.toContain("?:help")
 		expect(frame).toContain("t:theme")
 		// suppressed bindings disappear from the row.
 		expect(frame).not.toContain("q:quit")
