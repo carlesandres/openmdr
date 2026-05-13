@@ -699,6 +699,110 @@ describe("Browser — quit", () => {
 	})
 })
 
+describe("Browser — footer", () => {
+	test("renders global + sidebar hints when sidebar is focused", async () => {
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).toContain("q:quit")
+		expect(frame).toContain("?:help")
+		expect(frame).toContain("s:sidebar")
+		// sidebar.open hint surfaces because focus starts on sidebar.
+		expect(frame).toContain("↵:open")
+		// reader-only hints are absent.
+		expect(frame).not.toContain("[:prev")
+		expect(frame).not.toContain("]:next")
+	})
+
+	test("switches to reader-specific hints when focus moves to the reader", async () => {
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressTab()
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).toContain("esc:back")
+		expect(frame).toContain("[:prev")
+		expect(frame).toContain("]:next")
+		expect(frame).not.toContain("↵:open")
+	})
+
+	test("notice replaces hints after a theme cycle", async () => {
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(setup!.captureCharFrame()).toContain("q:quit")
+
+		await act(async () => {
+			setup!.mockInput.pressKey("t")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		expect(frame).toContain("theme:")
+		// hint row is replaced while the notice is live.
+		expect(frame).not.toContain("q:quit")
+	})
+
+	test("narrows the hint row to help-allowed bindings while help is open", async () => {
+		const TALL_VIEWPORT = { width: 120, height: 50 }
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={makeFiles(["a.md"])}
+					readFile={makeReader({ "a.md": "x" })}
+					onQuit={() => {}}
+				/>,
+				TALL_VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("?")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		const frame = setup!.captureCharFrame()
+		// help-allowed hints survive.
+		expect(frame).toContain("?:help")
+		expect(frame).toContain("t:theme")
+		// suppressed bindings disappear from the row.
+		expect(frame).not.toContain("q:quit")
+		expect(frame).not.toContain("s:sidebar")
+	})
+})
+
 describe("Browser — theme cycling", () => {
 	// t / T cycle through themeDefinitions; shift+L toggles tone.
 	// We assert on colors.background and colors.border because they are
