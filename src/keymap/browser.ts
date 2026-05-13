@@ -60,7 +60,7 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 		group: "Global",
 		description: "Toggle sidebar visibility",
 		hint: "sidebar",
-		keys: ["\\"],
+		keys: ["s"],
 		run: (c) => {
 			const willHide = c.sidebarVisible
 			c.setSidebarVisible((v) => !v)

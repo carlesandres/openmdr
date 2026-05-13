@@ -357,7 +357,7 @@ describe("Browser — focus", () => {
 })
 
 describe("Browser — sidebar toggle", () => {
-	test("\\ hides the sidebar and shifts focus to the reader", async () => {
+	test("s hides the sidebar and shifts focus to the reader", async () => {
 		await act(async () => {
 			setup = await renderBrowser(
 				<Browser
@@ -372,7 +372,7 @@ describe("Browser — sidebar toggle", () => {
 		expect(setup!.captureCharFrame()).toContain("files")
 
 		await act(async () => {
-			setup!.mockInput.pressKey("\\")
+			setup!.mockInput.pressKey("s")
 		})
 		await stepFrame(setup!.renderOnce)
 
@@ -382,7 +382,7 @@ describe("Browser — sidebar toggle", () => {
 		expect(frame).toContain("▸ a.md")
 	})
 
-	test("pressing \\ again restores the sidebar and focuses it", async () => {
+	test("pressing s again restores the sidebar and focuses it", async () => {
 		await act(async () => {
 			setup = await renderBrowser(
 				<Browser
@@ -396,11 +396,11 @@ describe("Browser — sidebar toggle", () => {
 		await stepFrame(setup!.renderOnce)
 
 		await act(async () => {
-			setup!.mockInput.pressKey("\\")
+			setup!.mockInput.pressKey("s")
 		})
 		await stepFrame(setup!.renderOnce)
 		await act(async () => {
-			setup!.mockInput.pressKey("\\")
+			setup!.mockInput.pressKey("s")
 		})
 		await stepFrame(setup!.renderOnce)
 
