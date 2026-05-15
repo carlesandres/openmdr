@@ -6,6 +6,15 @@
  * against the current context, so the row reflects what the user can
  * actually do right now. Overflow is handled by truncating from the right
  * (later-in-array bindings drop off first).
+ *
+ * Empty vault: the footer renders normally even when no markdown files
+ * were discovered. Intentional — `q:quit` and `?:help` are exactly what an
+ * empty-vault user needs as an exit and discoverability anchor.
+ *
+ * Width math assumes hint labels are ASCII plus a small set of single-cell
+ * BMP glyphs (see `displayKey`). `fitHints` and notice clipping use string
+ * length as a proxy for cell count; introducing a CJK or emoji label would
+ * require a real cell-width counter (e.g. East Asian Width).
  */
 
 import type { KeyBinding } from "./keymap/keymap.ts"
@@ -25,7 +34,13 @@ export interface FooterProps<C> {
 const HINT_SEPARATOR = "  "
 
 /** Display form for the first key of a binding. Picks the first chord and
- *  rewrites a few names to terminal-friendly shorthands. */
+ *  rewrites a few names to terminal-friendly shorthands.
+ *
+ *  Footer policy: only the first key is shown, even when a binding has
+ *  aliases (e.g. `sidebar.open` accepts `return`/`right`/`l`). The footer
+ *  is a narrow real-estate budget, and listing every alias would push out
+ *  other bindings on tight viewports. The full alias list lives in the
+ *  help overlay (`?`). */
 const displayKey = (raw: string): string => {
 	switch (raw) {
 		case "return":
