@@ -80,6 +80,7 @@ code {
 }
 pre {
 	background: var(--code-bg);
+	border: 1px solid var(--border);
 	padding: 1em;
 	border-radius: 6px;
 	overflow: auto;
