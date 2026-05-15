@@ -11,6 +11,10 @@ export interface ParsedArgs {
 	readonly width: string | null
 	/** True when `--all` was passed: include hidden + gitignored files in discovery. */
 	readonly all: boolean
+	/** True when `--serve` was passed: serve the given file as HTML, skip TUI. */
+	readonly serve: boolean
+	/** Value of `--port <N>`, or null. Validated by the boot layer. */
+	readonly port: string | null
 	/** True when `--help` was passed. */
 	readonly help: boolean
 	/** True when `--version` was passed. */
@@ -30,6 +34,8 @@ export const parseArgv = (argv: readonly string[]): ParsedArgs => {
 	let tone: string | null = null
 	let width: string | null = null
 	let all = false
+	let serve = false
+	let port: string | null = null
 	let help = false
 	let version = false
 
@@ -51,6 +57,13 @@ export const parseArgv = (argv: readonly string[]): ParsedArgs => {
 			case "--all":
 				all = true
 				continue
+			case "--serve":
+				serve = true
+				continue
+			case "--port":
+				port = argv[i + 1] ?? null
+				i++
+				continue
 			case "--help":
 			case "-h":
 				help = true
@@ -65,7 +78,7 @@ export const parseArgv = (argv: readonly string[]): ParsedArgs => {
 		}
 	}
 
-	return { path, theme, tone, width, all, help, version }
+	return { path, theme, tone, width, all, serve, port, help, version }
 }
 
 const themeList = themeDefinitions.map((t) => t.id).join(", ")
@@ -79,5 +92,7 @@ options:
   --tone <mode>  dark or light (default: dark)
   --width <N>    cap rendered markdown width at N columns
   --all          include hidden and gitignored files in discovery
+  --serve        serve the given file as HTML in the browser (skips TUI)
+  --port <N>     port for --serve (default: OS-assigned)
   -h, --help     show this help and exit
   -v, --version  print version and exit`

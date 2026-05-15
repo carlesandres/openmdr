@@ -14,13 +14,15 @@ import { SyntaxStyle } from "@opentui/core"
 import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
 import { useAtomValue, useAtomSet } from "@effect/atom-react"
 import { Effect } from "effect"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { type FileEntry } from "./discovery/walk.ts"
 import { Footer, FOOTER_HEIGHT } from "./Footer.tsx"
 import { HelpOverlay } from "./HelpOverlay.tsx"
 import { readFileText } from "./io/readFile.ts"
 import { browserBindings, type BrowserCtx } from "./keymap/browser.ts"
 import { dispatch } from "./keymap/keymap.ts"
+import { openInBrowser } from "./serve/openBrowser.ts"
+import { startServer, type ServerHandle } from "./serve/server.ts"
 import { colors, setActiveTheme } from "./theme/colors.ts"
 import { themeAtom } from "./theme/atom.ts"
 import { themeDefinitions, getThemeDefinition } from "./theme/registry.ts"
@@ -73,6 +75,16 @@ export const Browser = ({
 	const [sidebarScroll, setSidebarScroll] = useState<number>(0)
 	const [helpVisible, setHelpVisible] = useState<boolean>(false)
 	const [footerNotice, setFooterNotice] = useState<string | null>(null)
+	const serverRef = useRef<ServerHandle | null>(null)
+
+	// Stop the preview server on unmount so re-mounts (tests) and clean
+	// shutdowns don't leak a listening socket.
+	useEffect(() => {
+		return () => {
+			void serverRef.current?.stop()
+			serverRef.current = null
+		}
+	}, [])
 
 	// Single-slot notice with a 2s TTL. A new notice cancels the pending
 	// timer so the latest message gets its own full window.
@@ -154,6 +166,31 @@ export const Browser = ({
 		setHelpVisible,
 		cycleTheme,
 		toggleTone,
+		serveCurrent: () => {
+			const file = files[selectedIndex]
+			if (!file) return
+			let handle = serverRef.current
+			if (!handle) {
+				try {
+					handle = startServer({ path: file.path })
+					serverRef.current = handle
+					openInBrowser(handle.url)
+					setFooterNotice(`serving at ${handle.url}`)
+				} catch (err) {
+					setFooterNotice(`serve failed: ${String(err)}`)
+				}
+				return
+			}
+			if (handle.currentTarget() !== file.path) {
+				handle.setTarget(file.path)
+			}
+			// Always re-open: if the user closed the tab, retargeting alone
+			// would leave them with nothing visible. `open`/`xdg-open` focus
+			// an existing tab on the same URL when one is open, so this is
+			// idempotent for the common case.
+			openInBrowser(handle.url)
+			setFooterNotice(`serving ${file.relativePath} at ${handle.url}`)
+		},
 		quit: () => {
 			if (onQuit) {
 				onQuit()

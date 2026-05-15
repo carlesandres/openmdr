@@ -7,6 +7,8 @@ const empty: ParsedArgs = {
 	tone: null,
 	width: null,
 	all: false,
+	serve: false,
+	port: null,
 	help: false,
 	version: false,
 }
