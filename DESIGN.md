@@ -154,7 +154,7 @@ arrow-key siblings) rather than glow.
 | `escape`, `h`, `←` | Back / focus sidebar |
 | `[` / `]` | Previous / next file in list (from reader) |
 | `tab` | Toggle focus between sidebar and reader |
-| `\` | Toggle sidebar visibility |
+| `s` | Toggle sidebar visibility |
 | `/` | Open filter input (fuzzy match on path) |
 | `?` | Help overlay |
 | `q`, `ctrl+c` | Quit |
