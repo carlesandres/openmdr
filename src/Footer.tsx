@@ -29,6 +29,10 @@ export interface FooterProps<C> {
 	readonly ctx: C
 	readonly width: number
 	readonly notice?: string | null
+	/** When set, the footer row turns into the filter input — `/<query>▏` —
+	 *  and suppresses both the hint row and the notice. Mirrors hunk's
+	 *  StatusBar: one row of chrome, content swaps by state. */
+	readonly filter?: { readonly query: string } | null
 }
 
 const HINT_SEPARATOR = "  "
@@ -84,20 +88,27 @@ const fitHints = (hints: readonly string[], width: number): string => {
 	return firstKey.slice(0, width)
 }
 
-export const Footer = <C,>({ bindings, ctx, width, notice }: FooterProps<C>) => {
+export const Footer = <C,>({ bindings, ctx, width, notice, filter }: FooterProps<C>) => {
 	const usableWidth = Math.max(0, width - 2) // 1-cell horizontal padding each side
 
-	const content = notice
+	const filterContent = filter ? `/${filter.query}▏` : null
+	const hintContent = fitHints(
+		bindings
+			.filter((b) => (b.when ? b.when(ctx) : true))
+			.map(formatHint)
+			.filter((s): s is string => s !== null),
+		usableWidth,
+	)
+	const noticeContent = notice
 		? notice.length > usableWidth
 			? notice.slice(0, usableWidth)
 			: notice
-		: fitHints(
-				bindings
-					.filter((b) => (b.when ? b.when(ctx) : true))
-					.map(formatHint)
-					.filter((s): s is string => s !== null),
-				usableWidth,
-			)
+		: null
+
+	// Filter > notice > hints. Filter input is modal (the user is typing into
+	// it) so it must not be hidden by a transient theme/serve notice.
+	const content = filterContent ?? noticeContent ?? hintContent
+	const fg = filterContent || noticeContent ? colors.textStrong : colors.textMuted
 
 	return (
 		<box
@@ -111,11 +122,7 @@ export const Footer = <C,>({ bindings, ctx, width, notice }: FooterProps<C>) => 
 				backgroundColor: colors.background,
 			}}
 		>
-			<text
-				content={content}
-				wrapMode="none"
-				style={{ fg: notice ? colors.textStrong : colors.textMuted }}
-			/>
+			<text content={content} wrapMode="none" style={{ fg }} />
 		</box>
 	)
 }

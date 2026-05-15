@@ -1044,3 +1044,280 @@ describe("Browser — theme cycling", () => {
 		expect(colors.background).toBe(start)
 	})
 })
+
+describe("Browser — filter modal", () => {
+	test("/ opens the filter; typed chars narrow the visible list", async () => {
+		const files = makeFiles(["README.md", "docs/intro.md", "notes.md"])
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={files}
+					readFile={makeReader({
+						"README.md": "x",
+						"docs/intro.md": "y",
+						"notes.md": "z",
+					})}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("/")
+		})
+		await stepFrame(setup!.renderOnce)
+		// Filter input row visible.
+		expect(setup!.captureCharFrame()).toContain("/▏")
+
+		await act(async () => {
+			setup!.mockInput.pressKey("r")
+			setup!.mockInput.pressKey("e")
+			setup!.mockInput.pressKey("a")
+		})
+		await stepFrame(setup!.renderOnce)
+		const frame = setup!.captureCharFrame()
+		expect(frame).toContain("/rea")
+		expect(frame).toContain("README.md")
+		// Non-matching paths are filtered out.
+		expect(frame).not.toContain("notes.md")
+		expect(frame).not.toContain("docs/intro.md")
+	})
+
+	test("escape closes the filter and restores the full list", async () => {
+		const files = makeFiles(["README.md", "notes.md"])
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={files}
+					readFile={makeReader({ "README.md": "x", "notes.md": "y" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("/")
+			setup!.mockInput.pressKey("r")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(setup!.captureCharFrame()).not.toContain("notes.md")
+
+		await act(async () => {
+			setup!.mockInput.pressEscape()
+			await new Promise<void>((resolve) => setTimeout(resolve, 60))
+		})
+		await stepFrame(setup!.renderOnce)
+		const frame = setup!.captureCharFrame()
+		expect(frame).toContain("README.md")
+		expect(frame).toContain("notes.md")
+		// Filter input row gone.
+		expect(frame).not.toContain("/r▏")
+	})
+
+	test("enter closes the filter and focuses the reader on the match", async () => {
+		const files = makeFiles(["README.md", "docs/intro.md", "notes.md"])
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={files}
+					readFile={makeReader({
+						"README.md": "x",
+						"docs/intro.md": "y",
+						"notes.md": "z",
+					})}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("/")
+			setup!.mockInput.pressKey("i")
+			setup!.mockInput.pressKey("n")
+			setup!.mockInput.pressKey("t")
+		})
+		await stepFrame(setup!.renderOnce)
+		// Filter narrowed to a single match (docs/intro.md).
+		expect(setup!.captureCharFrame()).toContain("docs/intro.md")
+
+		await act(async () => {
+			setup!.mockInput.pressEnter()
+		})
+		await stepFrame(setup!.renderOnce)
+		const frame = setup!.captureCharFrame()
+		// Reader is now focused on docs/intro.md; filter is closed.
+		expect(readerTitleContains(frame, "docs/intro.md")).toBe(true)
+		expect(frame).not.toContain("/int▏")
+	})
+
+	test("backspace removes a query character and re-broadens the list", async () => {
+		const files = makeFiles(["README.md", "notes.md"])
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={files}
+					readFile={makeReader({ "README.md": "x", "notes.md": "y" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("/")
+			setup!.mockInput.pressKey("r")
+			setup!.mockInput.pressKey("e")
+		})
+		await stepFrame(setup!.renderOnce)
+		expect(setup!.captureCharFrame()).not.toContain("notes.md")
+
+		await act(async () => {
+			setup!.mockInput.pressBackspace()
+			setup!.mockInput.pressBackspace()
+		})
+		await stepFrame(setup!.renderOnce)
+		const frame = setup!.captureCharFrame()
+		// Query is empty; both files visible again.
+		expect(frame).toContain("README.md")
+		expect(frame).toContain("notes.md")
+	})
+
+	test("return translates the highlighted match back to its full-list index", async () => {
+		// One match for "readme" — docs/readme.md, at full-list index 3.
+		// The user does NOT arrow down, so the filtered cursor is at index 0.
+		// Without translation, closing the filter would land selectedIndex=0
+		// on alpha.md (the file at full-list index 0). With translation, the
+		// reader opens docs/readme.md.
+		const files = makeFiles(["alpha.md", "beta.md", "gamma.md", "docs/readme.md"])
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={files}
+					readFile={makeReader({
+						"alpha.md": "a",
+						"beta.md": "b",
+						"gamma.md": "g",
+						"docs/readme.md": "d",
+					})}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("/")
+			setup!.mockInput.pressKey("r")
+			setup!.mockInput.pressKey("e")
+			setup!.mockInput.pressKey("a")
+			setup!.mockInput.pressKey("d")
+			setup!.mockInput.pressKey("m")
+			setup!.mockInput.pressKey("e")
+		})
+		await stepFrame(setup!.renderOnce)
+		// Sanity: filter narrowed to a single match.
+		expect(setup!.captureCharFrame()).toContain("docs/readme.md")
+
+		await act(async () => {
+			setup!.mockInput.pressEnter()
+		})
+		await stepFrame(setup!.renderOnce)
+		const frame = setup!.captureCharFrame()
+		expect(readerTitleContains(frame, "docs/readme.md")).toBe(true)
+		// Specifically not alpha.md (full-list[0]) — the bug case.
+		expect(readerTitleContains(frame, "alpha.md")).toBe(false)
+	})
+
+	test("escape keeps the cursor on the highlighted match (not a random file at the same numeric index)", async () => {
+		// Same shape as above: cursor at filtered[0]=docs/readme.md (full-list
+		// index 3). Without translation, Esc would leave selectedIndex=0
+		// (alpha.md) under the cursor. With translation, the cursor follows
+		// the highlighted match into the restored list.
+		const files = makeFiles(["alpha.md", "beta.md", "gamma.md", "docs/readme.md"])
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={files}
+					readFile={makeReader({
+						"alpha.md": "a",
+						"beta.md": "b",
+						"gamma.md": "g",
+						"docs/readme.md": "d",
+					})}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("/")
+			setup!.mockInput.pressKey("r")
+			setup!.mockInput.pressKey("e")
+			setup!.mockInput.pressKey("a")
+			setup!.mockInput.pressKey("d")
+			setup!.mockInput.pressKey("m")
+			setup!.mockInput.pressKey("e")
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressEscape()
+			await new Promise<void>((resolve) => setTimeout(resolve, 60))
+		})
+		await stepFrame(setup!.renderOnce)
+		const frame = setup!.captureCharFrame()
+		// Filter closed; full list visible again.
+		expect(frame).not.toContain("/readme▏")
+		expect(frame).toContain("alpha.md")
+		expect(frame).toContain("beta.md")
+		expect(frame).toContain("gamma.md")
+		expect(frame).toContain("docs/readme.md")
+		// Reader title reflects docs/readme.md — the file under the cursor
+		// when Esc fired — NOT alpha.md.
+		expect(readerTitleContains(frame, "docs/readme.md")).toBe(true)
+		expect(readerTitleContains(frame, "alpha.md")).toBe(false)
+		// Focus stayed in sidebar (Esc cancels, doesn't open the file).
+		expect(frame).toContain("▸ files")
+	})
+
+	test("printable characters do not fire their normal bindings while filter is open", async () => {
+		// `s` would normally toggle the sidebar. While filter is open it must
+		// be treated as input.
+		const files = makeFiles(["README.md", "scripts/build.md"])
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={files}
+					readFile={makeReader({ "README.md": "x", "scripts/build.md": "y" })}
+					onQuit={() => {}}
+				/>,
+				VIEWPORT,
+			)
+		})
+		await stepFrame(setup!.renderOnce)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("/")
+			setup!.mockInput.pressKey("s")
+		})
+		await stepFrame(setup!.renderOnce)
+		const frame = setup!.captureCharFrame()
+		// Sidebar still visible; `s` went into the query.
+		expect(frame).toContain("/s▏")
+		expect(frame).toContain("scripts/build.md")
+		// README.md doesn't fuzzy-match 's' as a subsequence? It contains an
+		// 's' in some terminal fonts — actually README.md has no 's', so it
+		// drops out.
+		expect(frame).not.toContain("README.md")
+	})
+})

@@ -18,6 +18,17 @@ file is the curated, narrative version.
   sidebar. `dirs-first` (the existing default) keeps directories above
   files; `files-first` flips it, surfacing top-level files like
   `README.md` before nested subtrees.
+- `/` opens a filter input at the bottom of the sidebar. Typed
+  characters narrow the list with a fuzzy subsequence match on the
+  file's relative path; matches are re-ranked by score (word-boundary
+  and consecutive-character bonuses). Esc clears the query and closes
+  the filter; Return closes it and focuses the reader on the highlighted
+  match.
+
+### Changed
+
+- `/` is no longer reserved (DESIGN.md §7.3) — it now drives the filter
+  input.
 
 ## [0.2.1] — 2026-05-13
 

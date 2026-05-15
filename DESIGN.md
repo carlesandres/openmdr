@@ -155,6 +155,7 @@ arrow-key siblings) rather than glow.
 | `[` / `]` | Previous / next file in list (from reader) |
 | `tab` | Toggle focus between sidebar and reader |
 | `\` | Toggle sidebar visibility |
+| `/` | Open filter input (fuzzy match on path) |
 | `?` | Help overlay |
 | `q`, `ctrl+c` | Quit |
 
@@ -164,7 +165,6 @@ Do not bind these in v1:
 
 | Key | Reserved for |
 |---|---|
-| `/` | Search |
 | `e` | Open in `$EDITOR` |
 | `o` | Open externally (browser / Finder / xdg-open) |
 | `r` | Reload current file |
@@ -367,6 +367,9 @@ relevant call sites. Grep for `TODO(revisit:` to enumerate them.
     detection, command-palette routing.
   - Trigger to revisit: a third interactive overlay/modal lands (search,
     filter, command palette), OR a real need for chord/count input emerges.
+  - **Current overlay count: 2** (help overlay, `/` filter modal). Both
+    intercept keys outside the data-driven dispatch via `if`-branches in
+    `Browser.tsx`. One more interactive surface trips the trigger.
 
 - **Theme as a typed token interface — landed.**
   Implemented in `src/theme/`: `ColorPalette` interface (~12 semantic tokens),
