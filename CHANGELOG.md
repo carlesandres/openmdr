@@ -12,6 +12,13 @@ file is the curated, narrative version.
 
 ## [Unreleased]
 
+### Added
+
+- `--sort <mode>` flag selecting the per-directory group order in the
+  sidebar. `dirs-first` (the existing default) keeps directories above
+  files; `files-first` flips it, surfacing top-level files like
+  `README.md` before nested subtrees.
+
 ## [0.2.1] — 2026-05-13
 
 ### Added

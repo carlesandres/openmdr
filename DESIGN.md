@@ -113,7 +113,7 @@ etc.) live in §7.3 — consult that section before binding new keys.
 | Hard skips | `node_modules`, `.git`, `.venv` (always, even with `--all`). |
 | Hidden files | Skipped by default; `--all` to include. |
 | Symlinks | Not followed (loop hazard). |
-| Sort | Alphabetical within a directory; directories before files. |
+| Sort | Alphabetical within each group. Group order is controlled by `--sort`: `dirs-first` (default) puts directories above files; `files-first` flips it so the current directory's files appear before nested subtrees. |
 
 Discovery is a **non-trivial product decision** — users notice when their mental
 model of "what shows up" doesn't match. Changing these rules is a versioned change.

@@ -7,6 +7,7 @@ const empty: ParsedArgs = {
 	tone: null,
 	width: null,
 	all: false,
+	sort: null,
 	serve: false,
 	port: null,
 	help: false,
@@ -64,6 +65,18 @@ describe("parseArgv — boolean flags", () => {
 	test("--version and -v are parsed as version", () => {
 		expect(parseArgv(["--version"])).toEqual(args({ version: true }))
 		expect(parseArgv(["-v"])).toEqual(args({ version: true }))
+	})
+})
+
+describe("parseArgv — --sort", () => {
+	test("captures the value after --sort", () => {
+		expect(parseArgv(["--sort", "files-first"])).toEqual(args({ sort: "files-first" }))
+	})
+	test("captures unknown sort values verbatim (boot validates)", () => {
+		expect(parseArgv(["--sort", "weird"])).toEqual(args({ sort: "weird" }))
+	})
+	test("--sort with no value yields null", () => {
+		expect(parseArgv(["--sort"])).toEqual(args({ sort: null }))
 	})
 })
 

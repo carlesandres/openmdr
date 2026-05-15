@@ -17,7 +17,7 @@ import { useMemo } from "react"
 import pkg from "../package.json" with { type: "json" }
 import { Browser } from "./Browser.tsx"
 import { parseArgv, usage } from "./cli/argv.ts"
-import { walk } from "./discovery/walk.ts"
+import { walk, type SortOrder } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
 import { openInBrowser } from "./serve/openBrowser.ts"
 import { startServer } from "./serve/server.ts"
@@ -185,7 +185,15 @@ if (import.meta.main) {
 		process.on("SIGTERM", shutdown)
 		// Bun.serve keeps the event loop alive until stop().
 	} else {
-		await runTui({ target, themeId, tone, maxWidth, all: args.all })
+		let sort: SortOrder = "dirs-first"
+		if (args.sort !== null) {
+			if (args.sort !== "dirs-first" && args.sort !== "files-first") {
+				console.error(`openmdr: --sort must be "dirs-first" or "files-first", got "${args.sort}"`)
+				process.exit(2)
+			}
+			sort = args.sort
+		}
+		await runTui({ target, themeId, tone, maxWidth, all: args.all, sort })
 	}
 }
 
@@ -195,9 +203,17 @@ interface TuiBootOptions {
 	readonly tone: "dark" | "light"
 	readonly maxWidth: number | null
 	readonly all: boolean
+	readonly sort: SortOrder
 }
 
-async function runTui({ target, themeId, tone, maxWidth, all }: TuiBootOptions): Promise<void> {
+async function runTui({
+	target,
+	themeId,
+	tone,
+	maxWidth,
+	all,
+	sort,
+}: TuiBootOptions): Promise<void> {
 	let stats: Awaited<ReturnType<typeof stat>>
 	try {
 		stats = await stat(target)
@@ -211,7 +227,7 @@ async function runTui({ target, themeId, tone, maxWidth, all }: TuiBootOptions):
 
 	if (stats.isDirectory()) {
 		const files = await Effect.runPromise(
-			walk(target, { all }).pipe(
+			walk(target, { all, sort }).pipe(
 				Effect.tapError((err) =>
 					Effect.sync(() => {
 						console.error(`openmdr: cannot walk ${target}: ${String(err.cause)}`)
