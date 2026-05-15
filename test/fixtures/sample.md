@@ -11,9 +11,9 @@ in `test/spike.test.tsx` and friends — change them and you change tests.
 
 > A blockquote.
 
-\`\`\`ts
+```ts
 const greeting = "hello, openmdr"
-\`\`\`
+```
 
 | Col A | Col B |
 |---|---|
