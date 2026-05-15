@@ -19,6 +19,8 @@ import { Browser } from "./Browser.tsx"
 import { parseArgv, usage } from "./cli/argv.ts"
 import { walk } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
+import { openInBrowser } from "./serve/openBrowser.ts"
+import { startServer } from "./serve/server.ts"
 import { colors, setActiveTheme } from "./theme/colors.ts"
 import { themeAtom, type ThemeState } from "./theme/atom.ts"
 import { getThemeDefinition, isThemeId, themeDefinitions } from "./theme/registry.ts"
@@ -150,6 +152,52 @@ if (import.meta.main) {
 
 	const target = args.path ?? "."
 
+	if (args.serve) {
+		let stats: Awaited<ReturnType<typeof stat>>
+		try {
+			stats = await stat(target)
+		} catch (err) {
+			console.error(`openmdr: cannot access ${target}: ${String(err)}`)
+			process.exit(1)
+		}
+		if (stats.isDirectory()) {
+			console.error(`openmdr: --serve requires a file, got directory ${target}`)
+			process.exit(2)
+		}
+		let port = 0
+		if (args.port !== null) {
+			const n = Number.parseInt(args.port, 10)
+			if (!Number.isFinite(n) || n < 0 || n > 65535) {
+				console.error(`openmdr: --port must be 0-65535, got "${args.port}"`)
+				process.exit(2)
+			}
+			port = n
+		}
+		const handle = startServer({ path: target, port })
+		console.log(`openmdr serving ${target} at ${handle.url}`)
+		console.log("press ctrl+c to stop")
+		openInBrowser(handle.url)
+		const shutdown = async () => {
+			await handle.stop()
+			process.exit(0)
+		}
+		process.on("SIGINT", shutdown)
+		process.on("SIGTERM", shutdown)
+		// Bun.serve keeps the event loop alive until stop().
+	} else {
+		await runTui({ target, themeId, tone, maxWidth, all: args.all })
+	}
+}
+
+interface TuiBootOptions {
+	readonly target: string
+	readonly themeId: string
+	readonly tone: "dark" | "light"
+	readonly maxWidth: number | null
+	readonly all: boolean
+}
+
+async function runTui({ target, themeId, tone, maxWidth, all }: TuiBootOptions): Promise<void> {
 	let stats: Awaited<ReturnType<typeof stat>>
 	try {
 		stats = await stat(target)
@@ -163,7 +211,7 @@ if (import.meta.main) {
 
 	if (stats.isDirectory()) {
 		const files = await Effect.runPromise(
-			walk(target, { all: args.all }).pipe(
+			walk(target, { all }).pipe(
 				Effect.tapError((err) =>
 					Effect.sync(() => {
 						console.error(`openmdr: cannot walk ${target}: ${String(err.cause)}`)

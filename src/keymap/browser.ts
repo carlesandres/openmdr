@@ -20,6 +20,8 @@ export interface BrowserCtx {
 	readonly cycleTheme: (delta: 1 | -1) => void
 	readonly toggleTone: () => void
 	readonly quit: () => void
+	/** Start (or retarget) the HTML preview server on the focused file. */
+	readonly serveCurrent: () => void
 }
 
 /** Step size for shift+j/k and the space/b/page keys. Constant for v1; could
@@ -76,6 +78,15 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 		hint: "help",
 		keys: ["?"],
 		run: (c) => c.setHelpVisible((v) => !v),
+	},
+	{
+		id: "serve.current",
+		group: "Global",
+		description: "Open current file in browser as HTML",
+		hint: "html",
+		keys: ["o"],
+		when: haveFiles,
+		run: (c) => c.serveCurrent(),
 	},
 	{
 		id: "theme.next",
