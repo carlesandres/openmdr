@@ -1,6 +1,6 @@
 # house — Design
 
-> **Status:** Draft. `house` is a provisional name; it may change before public release.
+> **Status:** Draft.
 > **Inspiration:** [`glow`](https://github.com/charmbracelet/glow) (Go, bubbletea/glamour).
 > **Stack target:** [`opentui`](https://github.com/anomalyco/opentui) on Bun + TypeScript.
 
@@ -31,8 +31,9 @@ have a minimal CLI.
 
 These are hard non-goals. We will say no to PRs that pull in this direction.
 
-- **Not an editor.** No buffer, no insert mode, no writes to disk. (v2 may shell out
-  to `$EDITOR`, but that is a hand-off, not editing inside the app.)
+- **Not an editor.** No buffer, no insert mode, no writes to disk. (Future
+  releases may shell out to `$EDITOR`, but that is a hand-off, not editing
+  inside the app.)
 - **Not an exporter.** No HTML, PDF, or image output.
 - **Not a cloud / sync service.** Glow had a stash feature; it was removed. We will
   not reintroduce that class of feature.
@@ -41,7 +42,7 @@ These are hard non-goals. We will say no to PRs that pull in this direction.
 - **Not a custom-stylesheet platform** in v1. No JSON/YAML theme files. Themes are
   TypeScript objects shipped with the binary.
 - **No custom markdown parser.** v1 uses opentui's built-in `<markdown>` renderer.
-  We reserve the right to swap to a custom remark/mdast pipeline in v2 if and only
+  We reserve the right to swap to a custom remark/mdast pipeline later if and only
   if a concrete need (theming gap, link-following, search highlighting) forces it.
 
 ## 4. Target User & Use Cases
@@ -55,8 +56,8 @@ at a `docs/` tree (or a wiki, or an Obsidian vault) and navigating it like a sma
 static site. v1 is built so this is reachable, not delivered.
 
 Out of scope for both: scripts piping markdown through a CLI formatter
-(glow's other persona). We will keep stdin support on the v2+ list, but it is not
-the design center.
+(glow's other persona). We will keep stdin support on the post-beta list, but it
+is not the design center.
 
 ## 5. Product Scope
 
@@ -77,21 +78,23 @@ v1 ships when:
    images-as-alt-text, horizontal rules, fenced code blocks (plain).
 4. The keymap in §7.2 works end-to-end, including the help overlay.
 5. Dark and light themes ship; `--theme dark|light` selects (default `dark`).
-   Terminal-background auto-detect is deferred to v2 (§12).
+   Terminal-background auto-detect is deferred to beta (§12).
 6. `--width N` controls word-wrap column.
 7. The app builds as a Bun standalone binary (host platform) with a smoke test
-   on the binary. npm package and cross-target binaries are deferred to v2 (§10.5).
+   on the binary. npm package and cross-target binaries are deferred to beta (§10.5).
 8. `README.md` covers install + run; `DESIGN.md` reflects shipped behavior.
 
 **v1 status: shipped** (see `LICENSE`, `README.md`, and the commit log up to and
-including the LICENSE commit). Subsequent work targets §10 v2 gates and the
+including the LICENSE commit). Subsequent work targets §10 beta gates and the
 deferred items listed in [`ROADMAP.md`](./ROADMAP.md) (overview in §5.3).
 
 There is no performance gate, no coverage gate, and no public release in v1.
 
-### 5.2 v2 — Public release gates
+### 5.2 beta — Public release gates
 
-v2 is when we put the project in front of strangers. The gates are in §10.
+`beta` is when we put the project in front of strangers. The gates are in
+§10. See `CONTEXT.md` for the glossary entry distinguishing `beta` (a
+release milestone) from any semver version.
 
 ### 5.3 Deferred / future
 
@@ -159,7 +162,7 @@ arrow-key siblings) rather than glow.
 | `?` | Help overlay |
 | `q`, `ctrl+c` | Quit |
 
-### 7.3 Reserved keys (v2+)
+### 7.3 Reserved keys (future)
 
 Do not bind these in v1:
 
@@ -179,7 +182,7 @@ border, borderActive, selectedBg, selectedBgInactive, error, syntax). Selection
 is via `--theme dark|light` (default `dark`).
 
 Terminal-background auto-detect (OSC 11 / `COLORFGBG` / fallback) is **deferred
-to v2** — see §12. Until that lands, users opt in via `--theme`.
+to beta** — see §12. Until that lands, users opt in via `--theme`.
 
 Visual direction is **typographic**: generous whitespace, light accents, lots of
 contrast on headings. Glow's dense background-bar style is a workaround for
@@ -192,16 +195,16 @@ constrained renderers — we are not constrained.
 | Runtime | Bun | Matches `ghui`; standalone-binary build pipeline already proven. |
 | Language | TypeScript | Strict mode. |
 | TUI framework | `@opentui/react` | JSX + hooks fit a multi-view app; matches `ghui`. |
-| State / IO | [Effect](https://effect.website) | Author wants to learn it; well-suited to async/IO when v2 features land. |
+| State / IO | [Effect](https://effect.website) | Author wants to learn it; well-suited to async/IO when beta features land. |
 | Markdown rendering | `opentui`'s built-in `<markdown>` (`MarkdownRenderable`) | opentui ships a production-hardened markdown renderer with tables, tree-sitter syntax highlighting, and theme support via `SyntaxStyle`. Reusing it skips a large class of parsing/layout work and matches the "showcase opentui" goal. |
 | Linter | `oxlint` | Matches `ghui`. |
 | Formatter | `oxfmt` | Matches `ghui`. |
 | Tests | `bun test` | Stays in-runtime. |
-| Distribution | Bun standalone binary + npm package | Brew tap deferred to v2. |
+| Distribution | Bun standalone binary + npm package | Brew tap deferred to post-beta. |
 
 **Note on Effect.** The author has not shipped Effect before. Some early code will
 read like "Effect by way of Promises" until the patterns settle. That is expected
-and acceptable; refactors-toward-idiomatic-Effect are tracked as work in v1→v2.
+and acceptable; refactors-toward-idiomatic-Effect are tracked as work in v1→beta.
 
 ## 9. Architecture Sketch
 
@@ -229,7 +232,7 @@ src/
 
 A separate `reader/` module did not justify itself in v1: opentui's `<markdown>`
 plus a `<scrollbox>` wrapper is small enough to live inline in `Browser.tsx`
-and the single-file `App` in `index.tsx`. Extracting it is a v2 task once a
+and the single-file `App` in `index.tsx`. Extracting it is a follow-up once a
 second consumer (e.g., URL-fetched markdown, search-result preview) appears.
 
 ### 9.2 Data flow
@@ -252,8 +255,8 @@ argv ──► cli ──► (path, options)
 
 Discovery, parsing, and rendering are pure (Effect-y) functions of their inputs.
 The TUI layer wires them to user input and screen output. Keeping these layers
-strictly separated is what lets us add search, link-following, and live-reload in
-v2 without touching the renderer.
+strictly separated is what lets us add search, link-following, and live-reload
+later without touching the renderer.
 
 ### 9.3 Effect layering (sketch)
 
@@ -266,9 +269,9 @@ v2 without touching the renderer.
 Errors are tagged unions. No `throw` in domain code; errors-as-values flow up to
 the TUI layer, which renders them inline (e.g., a "couldn't parse this file" box).
 
-## 10. v2 Quality Gates
+## 10. beta Quality Gates
 
-These are gates for *calling it v2 and shipping publicly*, not blockers for
+These are gates for *calling it beta and shipping publicly*, not blockers for
 individual PRs.
 
 ### 10.1 Performance (targets to validate)
@@ -320,7 +323,7 @@ A `bun run bench` script checks these against a fixture corpus checked into
   runtime, no compiled binary). Modeled on ghui's distribution shape.
   Trigger: GH release `published` event → `publish.yml` runs `npm
   publish` via Trusted Publisher.
-- **Single-binary distribution is a follow-up**, not a v2 gate. It is
+- **Single-binary distribution is a follow-up**, not a beta gate. It is
   attractive (no Bun-on-PATH requirement) but the matrix-build cost and
   per-OS smoke complexity are real. Tracked as a GitHub issue; revisit
   when there is concrete user demand for "I want one binary, not
@@ -340,12 +343,12 @@ A `bun run bench` script checks these against a fixture corpus checked into
 Things we will learn by building, not by debating.
 
 - Does Effect's Layer model fit a single-process TUI cleanly, or does it feel
-  oversized for the amount of IO we actually do? Revisit before v2.
+  oversized for the amount of IO we actually do? Revisit before beta.
 - How much does `opentui`'s React reconciler cost on full re-renders of long
   documents? May need windowing/virtualization for large files; will be measured
   against §10.1 targets.
 - What's the right boundary between "render plain markdown" (v1) and "follow a
-  link to another file" (v2)? Done well, the renderer already produces
+  link to another file" (post-v1)? Done well, the renderer already produces
   navigable link nodes; done poorly, we re-architect.
 - Bun's standalone binary size — acceptable, or do we need a slim build path?
 
@@ -426,6 +429,7 @@ relevant call sites. Grep for `TODO(revisit:` to enumerate them.
 
 - glow — https://github.com/charmbracelet/glow (Go reference; in `reference/glow/`)
 - ghui — https://github.com/kitlangton/ghui (opentui+Effect precedent; in `reference/ghui/`)
+- hunk — https://github.com/modem-dev/hunk (responsive-layout reference; in `reference/hunk/`)
 - opentui — https://github.com/anomalyco/opentui (rendering core; in `reference/opentui/`)
 - Effect — https://effect.website
 - remark / mdast — https://github.com/remarkjs/remark

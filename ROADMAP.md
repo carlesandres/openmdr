@@ -1,15 +1,17 @@
 # Roadmap
 
-This file is the single index of planned work for house. Each row points at
-the GitHub issue that tracks it. Prose-only entries are items still waiting on
-scoping before they become issues.
+Planned work for house is tracked in GitHub milestones (`beta`,
+`beta — stretch`, `1.0`, `backlog`) — see
+[milestones](https://github.com/carlesandres/house/milestones) for the
+authoritative list. This file groups items by theme for orientation; the
+milestone column is the source of truth for *when*.
 
 Architectural rationale, UX rules, and key reservations live in `DESIGN.md`.
-This file is a tracking layer on top of that.
+Glossary terms (e.g. `beta`) live in `CONTEXT.md`.
 
 ★ marks a confirmed competitive gap (mdcat / frogmouth / mdr — see issue #16).
 
-## Near-term — v2 release gates
+## Near-term — beta release gates
 
 | Theme | Item | Issue |
 |---|---|---|
@@ -25,7 +27,6 @@ This file is a tracking layer on top of that.
 
 | Item | Issue |
 |---|---|
-| Sort order of empty files in sidebar | [#21](https://github.com/carlesandres/house/issues/21) |
 | Theme cycling while help overlay is open | [#15](https://github.com/carlesandres/house/issues/15) (fixed in `bbd3e29`, verify and close) |
 
 ## File-level interactions
