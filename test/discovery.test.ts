@@ -110,6 +110,12 @@ describe("walk — hidden files", () => {
 		const result = await run(walk(root, { all: true }))
 		expect(names(result).sort()).toEqual([".hidden.md", "visible.md"])
 	})
+
+	test("reveals contents of hidden directories with all: true", async () => {
+		const root = await fixture({ "visible.md": "x", ".secret/inside.md": "x" })
+		const result = await run(walk(root, { all: true }))
+		expect(names(result).sort()).toEqual([".secret/inside.md", "visible.md"])
+	})
 })
 
 describe("walk — gitignore", () => {
@@ -163,6 +169,42 @@ describe("walk — gitignore", () => {
 		const result = await run(walk(root))
 		expect(names(result).sort()).toEqual(["src/main.md"])
 	})
+
+	test("honors negation patterns (!keep.md)", async () => {
+		const root = await fixture({
+			".gitignore": "*.md\n!keep.md\n",
+			"ignored.md": "x",
+			"keep.md": "x",
+		})
+		const result = await run(walk(root))
+		expect(names(result)).toEqual(["keep.md"])
+	})
+
+	test("honors glob patterns", async () => {
+		const root = await fixture({
+			".gitignore": "*.tmp.md\n",
+			"real.md": "x",
+			"scratch.tmp.md": "x",
+		})
+		const result = await run(walk(root))
+		expect(names(result)).toEqual(["real.md"])
+	})
+
+	// Currently diverges from `git`: walk evaluates each level's ignore
+	// independently and short-circuits on the first match, so a child
+	// !keep.md cannot un-ignore a file matched by a parent's *.md. Tracked
+	// separately; un-skip when the precedence is fixed.
+	test.todo("child .gitignore can re-include a file ignored by a parent .gitignore", async () => {
+		const root = await fixture({
+			".gitignore": "*.md\n",
+			"top.md": "x",
+			"sub/.gitignore": "!keep.md\n",
+			"sub/keep.md": "x",
+			"sub/drop.md": "x",
+		})
+		const result = await run(walk(root))
+		expect(names(result)).toEqual(["sub/keep.md"])
+	})
 })
 
 describe("walk — symlinks", () => {
@@ -176,6 +218,20 @@ describe("walk — symlinks", () => {
 		const result = await run(walk(root))
 		// "real" is walked normally; "linked" is a symlink and is skipped.
 		expect(names(result).sort()).toEqual(["real/inside.md", "top.md"])
+	})
+
+	test("does not follow symlinked files", async () => {
+		const root = await fixture({ "real.md": "x" })
+		await symlink(join(root, "real.md"), join(root, "linked.md"))
+		const result = await run(walk(root))
+		expect(names(result)).toEqual(["real.md"])
+	})
+
+	test("broken symlinks are skipped without erroring", async () => {
+		const root = await fixture({ "top.md": "x" })
+		await symlink(join(root, "does-not-exist.md"), join(root, "broken.md"))
+		const result = await run(walk(root))
+		expect(names(result)).toEqual(["top.md"])
 	})
 })
 
@@ -209,6 +265,15 @@ describe("walk — sort order", () => {
 describe("walk — errors", () => {
 	test("returns DiscoveryError when root does not exist", async () => {
 		const result = await run(Effect.result(walk("/no/such/path/__missing__")))
+		expect(Result.isFailure(result)).toBe(true)
+		if (Result.isFailure(result)) {
+			expect(result.failure).toBeInstanceOf(DiscoveryError)
+		}
+	})
+
+	test("returns DiscoveryError when root is a file, not a directory", async () => {
+		const root = await fixture({ "file.md": "x" })
+		const result = await run(Effect.result(walk(join(root, "file.md"))))
 		expect(Result.isFailure(result)).toBe(true)
 		if (Result.isFailure(result)) {
 			expect(result.failure).toBeInstanceOf(DiscoveryError)
