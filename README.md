@@ -4,7 +4,7 @@
 > is deprecated; install `@carlesandres/house` instead. The CLI binary is
 > now `house` (was `openmdr`).
 
-A terminal markdown reader built on [opentui](https://github.com/nicholasgasior/opentui).
+A terminal markdown reader built on [opentui](https://github.com/anomalyco/opentui).
 Point it at a directory and navigate its `.md` files without leaving the terminal.
 
 ```
@@ -93,6 +93,12 @@ house [options] <path>
 `synthwave84` · `tokyonight` · `vercel` · `vesper` · `zenburn`
 
 Each theme supports dark and light tones. Cycle with `t` / `T`; toggle tone with `L`.
+
+## Inspiration
+
+- [glow](https://github.com/charmbracelet/glow) — render markdown on the CLI, with pizzazz
+- [ghui](https://github.com/kitlangton/ghui) — keyboard-driven terminal UI for GitHub pull requests
+- [hunk](https://github.com/modem-dev/hunk) — review-first terminal diff viewer for agent-authored changesets
 
 ## License
 

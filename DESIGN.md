@@ -426,6 +426,7 @@ relevant call sites. Grep for `TODO(revisit:` to enumerate them.
 
 - glow — https://github.com/charmbracelet/glow (Go reference; in `reference/glow/`)
 - ghui — https://github.com/kitlangton/ghui (opentui+Effect precedent; in `reference/ghui/`)
+- hunk — https://github.com/modem-dev/hunk (responsive-layout reference; in `reference/hunk/`)
 - opentui — https://github.com/anomalyco/opentui (rendering core; in `reference/opentui/`)
 - Effect — https://effect.website
 - remark / mdast — https://github.com/remarkjs/remark
