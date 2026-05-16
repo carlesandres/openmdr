@@ -11,8 +11,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: openmdr version
-      description: Output of `openmdr --version` (or commit SHA if running from source).
+      label: house version
+      description: Output of `house --version` (or commit SHA if running from source).
       placeholder: "0.0.0"
     validations:
       required: true
@@ -31,7 +31,7 @@ body:
       label: Steps to reproduce
       description: Minimal commands or keystrokes. If the bug needs a specific markdown file, paste it inline (or link a gist).
       placeholder: |
-        1. `openmdr ./docs`
+        1. `house ./docs`
         2. press `j` 30 times
         3. ...
     validations:

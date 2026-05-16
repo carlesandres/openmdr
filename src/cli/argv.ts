@@ -90,7 +90,7 @@ export const parseArgv = (argv: readonly string[]): ParsedArgs => {
 
 const themeList = themeDefinitions.map((t) => t.id).join(", ")
 
-export const usage = `usage: openmdr [path] [options]
+export const usage = `usage: house [path] [options]
 
   path           file or directory; defaults to the current directory
 

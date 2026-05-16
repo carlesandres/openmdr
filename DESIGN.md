@@ -1,12 +1,12 @@
-# openmdr — Design
+# house — Design
 
-> **Status:** Draft. `openmdr` is a provisional name; it may change before public release.
+> **Status:** Draft. `house` is a provisional name; it may change before public release.
 > **Inspiration:** [`glow`](https://github.com/charmbracelet/glow) (Go, bubbletea/glamour).
 > **Stack target:** [`opentui`](https://github.com/anomalyco/opentui) on Bun + TypeScript.
 
 ## 1. Overview
 
-`openmdr` is a TUI-first markdown reader for the terminal. It opens in the current
+`house` is a TUI-first markdown reader for the terminal. It opens in the current
 directory (or a path argument), shows a sidebar of markdown files, and renders the
 selected file in an adjacent reader pane. It is meant to be a great daily-driver for
 reading local project docs, and a showcase for what `opentui` can do in a real app.
@@ -37,7 +37,7 @@ These are hard non-goals. We will say no to PRs that pull in this direction.
 - **Not a cloud / sync service.** Glow had a stash feature; it was removed. We will
   not reintroduce that class of feature.
 - **Not a general-purpose pager.** We will not try to replace `less`. Piping
-  arbitrary text into `openmdr` is out of scope.
+  arbitrary text into `house` is out of scope.
 - **Not a custom-stylesheet platform** in v1. No JSON/YAML theme files. Themes are
   TypeScript objects shipped with the binary.
 - **No custom markdown parser.** v1 uses opentui's built-in `<markdown>` renderer.
@@ -50,7 +50,7 @@ The primary user is a **developer reading local docs**: someone who has a repo o
 wants to skim the README and `docs/`, and would rather stay in the terminal than
 open a browser or VS Code preview.
 
-The likely future user is a **documentation explorer**: someone pointing `openmdr`
+The likely future user is a **documentation explorer**: someone pointing `house`
 at a `docs/` tree (or a wiki, or an Obsidian vault) and navigating it like a small
 static site. v1 is built so this is reachable, not delivered.
 
@@ -67,7 +67,7 @@ exists to prove the architecture and the UX.
 
 v1 ships when:
 
-1. `openmdr` and `openmdr <path>` open a TUI with a sidebar of `.md` / `.markdown` /
+1. `house` and `house <path>` open a TUI with a sidebar of `.md` / `.markdown` /
    `.mdx` files discovered recursively from the path (default cwd).
 2. Discovery respects `.gitignore`, skips `node_modules` / `.git` / `.venv`
    unconditionally, and does not follow symlinks.
@@ -316,7 +316,7 @@ A `bun run bench` script checks these against a fixture corpus checked into
 ### 10.5 Release / OSS hygiene
 
 - **Distribution: npm-only for now.** Published as
-  `@carlesandres/openmdr`; the user must have Bun on `PATH` (Bun is the
+  `@carlesandres/house`; the user must have Bun on `PATH` (Bun is the
   runtime, no compiled binary). Modeled on ghui's distribution shape.
   Trigger: GH release `published` event → `publish.yml` runs `npm
   publish` via Trusted Publisher.

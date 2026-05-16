@@ -12,7 +12,7 @@ in `test/spike.test.tsx` and friends — change them and you change tests.
 > A blockquote.
 
 ```ts
-const greeting = "hello, openmdr"
+const greeting = "hello, house"
 ```
 
 | Col A | Col B |

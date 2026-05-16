@@ -99,13 +99,13 @@ goes through a PR).
    ```bash
    gh run list --workflow publish.yml --limit 3
    gh run watch
-   npm view @carlesandres/openmdr version    # should equal X.Y.Z
+   npm view @carlesandres/house version    # should equal X.Y.Z
    ```
 
 There is no compiled binary, no Homebrew tap yet — both tracked as
 GitHub issues. Don't add an `NPM_TOKEN`-style secret; the npm-side
 config uses Trusted Publisher with owner `carlesandres`, repo
-`openmdr`, workflow `publish.yml`, environment `npm`.
+`house`, workflow `publish.yml`, environment `npm`.
 
 ## Things that are *not* the right move
 

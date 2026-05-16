@@ -54,7 +54,7 @@ const HELP_ALLOWED_IDS: ReadonlySet<string> = new Set([
 
 export const Browser = ({
 	files,
-	title = "openmdr",
+	title = "house",
 	initialIndex = 0,
 	maxWidth = null,
 	onQuit,

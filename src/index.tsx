@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * openmdr — entry point.
+ * house — entry point.
  *
  * Reads a markdown file path from argv and renders it via opentui's built-in
  * <markdown> component inside a scrollbox. q / ctrl+c to quit.
@@ -36,7 +36,7 @@ export interface AppProps {
 	readonly onQuit?: () => void
 }
 
-export const App = ({ content, title = "openmdr", maxWidth = null, onQuit }: AppProps) => {
+export const App = ({ content, title = "house", maxWidth = null, onQuit }: AppProps) => {
 	const renderer = useRenderer()
 	const { width, height } = useTerminalDimensions()
 	const theme = useAtomValue(themeAtom)
@@ -125,17 +125,17 @@ if (import.meta.main) {
 	const themeId = args.theme ?? "opencode"
 	if (!isThemeId(themeId)) {
 		const known = themeDefinitions.map((t) => t.id).join(", ")
-		console.error(`openmdr: unknown theme "${themeId}". Known: ${known}`)
+		console.error(`house: unknown theme "${themeId}". Known: ${known}`)
 		process.exit(2)
 	}
 	const tone = args.tone ?? "dark"
 	if (tone !== "dark" && tone !== "light") {
-		console.error(`openmdr: --tone must be "dark" or "light", got "${tone}"`)
+		console.error(`house: --tone must be "dark" or "light", got "${tone}"`)
 		process.exit(2)
 	}
 	const themeDef = getThemeDefinition(themeId)
 	if (themeDef === undefined) {
-		console.error(`openmdr: unknown theme "${themeId}"`)
+		console.error(`house: unknown theme "${themeId}"`)
 		process.exit(2)
 	}
 	setActiveTheme(themeDef, tone)
@@ -144,7 +144,7 @@ if (import.meta.main) {
 	if (args.width !== null) {
 		const n = Number.parseInt(args.width, 10)
 		if (!Number.isFinite(n) || n <= 0) {
-			console.error(`openmdr: --width must be a positive integer, got "${args.width}"`)
+			console.error(`house: --width must be a positive integer, got "${args.width}"`)
 			process.exit(2)
 		}
 		maxWidth = n
@@ -157,24 +157,24 @@ if (import.meta.main) {
 		try {
 			stats = await stat(target)
 		} catch (err) {
-			console.error(`openmdr: cannot access ${target}: ${String(err)}`)
+			console.error(`house: cannot access ${target}: ${String(err)}`)
 			process.exit(1)
 		}
 		if (stats.isDirectory()) {
-			console.error(`openmdr: --serve requires a file, got directory ${target}`)
+			console.error(`house: --serve requires a file, got directory ${target}`)
 			process.exit(2)
 		}
 		let port = 0
 		if (args.port !== null) {
 			const n = Number.parseInt(args.port, 10)
 			if (!Number.isFinite(n) || n < 0 || n > 65535) {
-				console.error(`openmdr: --port must be 0-65535, got "${args.port}"`)
+				console.error(`house: --port must be 0-65535, got "${args.port}"`)
 				process.exit(2)
 			}
 			port = n
 		}
 		const handle = startServer({ path: target, port })
-		console.log(`openmdr serving ${target} at ${handle.url}`)
+		console.log(`house serving ${target} at ${handle.url}`)
 		console.log("press ctrl+c to stop")
 		openInBrowser(handle.url)
 		const shutdown = async () => {
@@ -188,7 +188,7 @@ if (import.meta.main) {
 		let sort: SortOrder = "dirs-first"
 		if (args.sort !== null) {
 			if (args.sort !== "dirs-first" && args.sort !== "files-first") {
-				console.error(`openmdr: --sort must be "dirs-first" or "files-first", got "${args.sort}"`)
+				console.error(`house: --sort must be "dirs-first" or "files-first", got "${args.sort}"`)
 				process.exit(2)
 			}
 			sort = args.sort
@@ -218,7 +218,7 @@ async function runTui({
 	try {
 		stats = await stat(target)
 	} catch (err) {
-		console.error(`openmdr: cannot access ${target}: ${String(err)}`)
+		console.error(`house: cannot access ${target}: ${String(err)}`)
 		process.exit(1)
 	}
 
@@ -230,7 +230,7 @@ async function runTui({
 			walk(target, { all, sort }).pipe(
 				Effect.tapError((err) =>
 					Effect.sync(() => {
-						console.error(`openmdr: cannot walk ${target}: ${String(err.cause)}`)
+						console.error(`house: cannot walk ${target}: ${String(err.cause)}`)
 					}),
 				),
 			),
@@ -248,7 +248,7 @@ async function runTui({
 			readFileText(target).pipe(
 				Effect.tapError((err) =>
 					Effect.sync(() => {
-						console.error(`openmdr: cannot read ${err.path}: ${String(err.cause)}`)
+						console.error(`house: cannot read ${err.path}: ${String(err.cause)}`)
 					}),
 				),
 			),

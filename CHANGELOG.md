@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to openmdr land here. Format follows
+All notable changes to house (renamed from `openmdr` in 0.3.0) land here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) from
 v0.1.0 onward.
@@ -11,6 +11,21 @@ and lets GitHub auto-generate release notes from commit subjects; this
 file is the curated, narrative version.
 
 ## [Unreleased]
+
+## [0.3.0] — 2026-05-16
+
+### Changed
+
+- **Project renamed from `openmdr` to `house`.** The npm package is now
+  `@carlesandres/house`; `@carlesandres/openmdr` is deprecated and will
+  not receive further releases. The CLI binary is now `house` (was
+  `openmdr`). The GitHub repository moved to
+  `https://github.com/carlesandres/house`; GitHub auto-redirects old
+  URLs and issue/PR numbers are preserved. The theme schema file moved
+  to `schema/house-theme.schema.json` and its `$id` is now a GitHub URL
+  on the new repo.
+- `/` is no longer reserved (DESIGN.md §7.3) — it now drives the filter
+  input.
 
 ### Added
 
@@ -24,11 +39,6 @@ file is the curated, narrative version.
   and consecutive-character bonuses). Esc clears the query and closes
   the filter; Return closes it and focuses the reader on the highlighted
   match.
-
-### Changed
-
-- `/` is no longer reserved (DESIGN.md §7.3) — it now drives the filter
-  input.
 
 ## [0.2.1] — 2026-05-13
 
@@ -162,7 +172,8 @@ auto-detect, single-binary distribution (issue
 [#2](https://github.com/carlesandres/openmdr/issues/2)),
 Homebrew tap. All tracked.
 
-[Unreleased]: https://github.com/carlesandres/openmdr/compare/v0.2.1...HEAD
-[0.2.1]: https://github.com/carlesandres/openmdr/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/carlesandres/openmdr/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/carlesandres/openmdr/releases/tag/v0.1.0
+[Unreleased]: https://github.com/carlesandres/house/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/carlesandres/house/compare/v0.2.1...v0.3.0
+[0.2.1]: https://github.com/carlesandres/house/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/carlesandres/house/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/carlesandres/house/releases/tag/v0.1.0

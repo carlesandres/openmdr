@@ -1,17 +1,17 @@
 {
-	"name": "@carlesandres/openmdr",
-	"version": "0.2.1",
+	"name": "@carlesandres/house",
+	"version": "0.3.0",
 	"description": "TUI-first markdown reader on opentui",
 	"type": "module",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/carlesandres/openmdr.git"
+		"url": "git+https://github.com/carlesandres/house.git"
 	},
 	"bugs": {
-		"url": "https://github.com/carlesandres/openmdr/issues"
+		"url": "https://github.com/carlesandres/house/issues"
 	},
-	"homepage": "https://github.com/carlesandres/openmdr#readme",
+	"homepage": "https://github.com/carlesandres/house#readme",
 	"keywords": [
 		"markdown",
 		"reader",
@@ -19,7 +19,8 @@
 		"tui",
 		"bun",
 		"opentui",
-		"glow"
+		"glow",
+		"house"
 	],
 	"files": [
 		"src",
@@ -33,7 +34,7 @@
 		"registry": "https://registry.npmjs.org/"
 	},
 	"bin": {
-		"openmdr": "src/index.tsx"
+		"house": "src/index.tsx"
 	},
 	"scripts": {
 		"dev": "bun --watch src/index.tsx",

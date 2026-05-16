@@ -172,5 +172,5 @@
 		}
 	},
 	"name": "Nord",
-	"$schema": "../../../schema/openmdr-theme.schema.json"
+	"$schema": "../../../schema/house-theme.schema.json"
 }

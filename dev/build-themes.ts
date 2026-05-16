@@ -5,7 +5,7 @@
  * PURPOSE
  * -------
  * Fetches every JSON theme from the upstream opencode repository on GitHub,
- * strips tokens that openmdr doesn't know about (the `diff*` cluster and
+ * strips tokens that house doesn't know about (the `diff*` cluster and
  * others), rewrites the `$schema` URL to point at our local schema file, and
  * regenerates `src/theme/loader.ts` so the new themes are bundled at runtime.
  *
@@ -78,13 +78,13 @@ const RAW_BASE =
 const REPO_ROOT = join(import.meta.dir, "..")
 const DEST_DIR = join(REPO_ROOT, "src/theme/themes")
 const LOADER_PATH = join(REPO_ROOT, "src/theme/loader.ts")
-const SCHEMA_REWRITE = "../../../schema/openmdr-theme.schema.json"
+const SCHEMA_REWRITE = "../../../schema/house-theme.schema.json"
 
 // ---------------------------------------------------------------------------
 // Token allow-list
 // Derived from ThemeTokens in src/theme/types.ts. Any token from upstream
 // that is NOT in this set (e.g. diff*, backgroundMenu, thinkingOpacity) is
-// stripped — it is simply not part of openmdr's rendering surface.
+// stripped — it is simply not part of house's rendering surface.
 // If you add a token to ThemeTokens, add it here too.
 // ---------------------------------------------------------------------------
 
@@ -138,7 +138,7 @@ const KNOWN_TOKENS = new Set([
 const githubHeaders = (): Record<string, string> => {
 	const headers: Record<string, string> = {
 		Accept: "application/vnd.github+json",
-		"User-Agent": "openmdr-build-themes",
+		"User-Agent": "house-build-themes",
 	}
 	const token = process.env["GITHUB_TOKEN"]
 	if (token) headers["Authorization"] = `Bearer ${token}`
@@ -366,7 +366,7 @@ export const loadBundledThemes = (): Map<string, ThemeDefinition> => {
 
 /**
  * Stub for user-supplied themes. A future release will load these from the
- * XDG config dir and from project-local \`.openmdr/themes/\`. Until then,
+ * XDG config dir and from project-local \`.house/themes/\`. Until then,
  * returns an empty map.
  */
 export const loadUserThemes = async (): Promise<Map<string, ThemeDefinition>> => {
@@ -493,7 +493,7 @@ for (const entry of themeEntries) {
 		console.error(
 			`Aborting. The upstream theme format may have changed.\n` +
 				`Options:\n` +
-				`  1. File a bug at https://github.com/carlesandres/openmdr/issues\n` +
+				`  1. File a bug at https://github.com/carlesandres/house/issues\n` +
 				`  2. Add "${id}" to a SKIP_THEMES set in this script and re-run.`,
 		)
 		process.exit(1)
