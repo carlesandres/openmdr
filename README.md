@@ -1,9 +1,5 @@
 # house
 
-> **Renamed from `openmdr`.** The old npm package `@carlesandres/openmdr`
-> is deprecated; install `@carlesandres/house` instead. The CLI binary is
-> now `house` (was `openmdr`).
-
 A terminal markdown reader built on [opentui](https://github.com/anomalyco/opentui).
 Point it at a directory and navigate its `.md` files without leaving the terminal.
 

@@ -42,10 +42,10 @@
  * UPSTREAM URLs
  * -------------
  * Directory listing:
- *   https://api.github.com/repos/sst/opencode/contents/packages/opencode/src/cli/cmd/tui/context/theme
+ *   https://api.github.com/repos/anomalyco/opencode/contents/packages/opencode/src/cli/cmd/tui/context/theme
  *
  * Individual files (raw):
- *   https://raw.githubusercontent.com/sst/opencode/dev/packages/opencode/src/cli/cmd/tui/context/theme/<name>.json
+ *   https://raw.githubusercontent.com/anomalyco/opencode/dev/packages/opencode/src/cli/cmd/tui/context/theme/<name>.json
  *
  * RATE LIMITS
  * -----------
@@ -66,10 +66,10 @@ import { join, relative, basename, extname } from "node:path"
 // ---------------------------------------------------------------------------
 
 const GITHUB_API_DIR =
-	"https://api.github.com/repos/sst/opencode/contents/packages/opencode/src/cli/cmd/tui/context/theme"
+	"https://api.github.com/repos/anomalyco/opencode/contents/packages/opencode/src/cli/cmd/tui/context/theme"
 
 const RAW_BASE =
-	"https://raw.githubusercontent.com/sst/opencode/dev/packages/opencode/src/cli/cmd/tui/context/theme"
+	"https://raw.githubusercontent.com/anomalyco/opencode/dev/packages/opencode/src/cli/cmd/tui/context/theme"
 
 // ---------------------------------------------------------------------------
 // Local paths
@@ -520,7 +520,7 @@ for (const entry of themeEntries) {
 	cleaned["name"] = typeof obj["name"] === "string" ? obj["name"] : filenameToDisplayName(filename)
 	cleaned["$schema"] = SCHEMA_REWRITE
 
-	const output = JSON.stringify(cleaned, null, 2) + "\n"
+	const output = JSON.stringify(cleaned, null, "\t") + "\n"
 	const relDest = relative(REPO_ROOT, destPath)
 
 	if (isDryRun) {
