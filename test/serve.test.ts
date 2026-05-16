@@ -38,7 +38,7 @@ describe("startServer", () => {
 	})
 
 	test("serves the rendered HTML at /", async () => {
-		dir = await mkdtemp(join(tmpdir(), "openmdr-serve-"))
+		dir = await mkdtemp(join(tmpdir(), "house-serve-"))
 		const file = join(dir, "a.md")
 		await writeFile(file, "# Title\n")
 		handle = startServer({ path: file })
@@ -50,7 +50,7 @@ describe("startServer", () => {
 	})
 
 	test("setTarget swaps the served file", async () => {
-		dir = await mkdtemp(join(tmpdir(), "openmdr-serve-"))
+		dir = await mkdtemp(join(tmpdir(), "house-serve-"))
 		const a = join(dir, "a.md")
 		const b = join(dir, "b.md")
 		await writeFile(a, "# A\n")
@@ -64,7 +64,7 @@ describe("startServer", () => {
 	})
 
 	test("binds to loopback (URL is localhost-only)", async () => {
-		dir = await mkdtemp(join(tmpdir(), "openmdr-serve-"))
+		dir = await mkdtemp(join(tmpdir(), "house-serve-"))
 		const file = join(dir, "a.md")
 		await writeFile(file, "x")
 		handle = startServer({ path: file })
@@ -75,7 +75,7 @@ describe("startServer", () => {
 	})
 
 	test("survives an atomic-rename save (re-watches)", async () => {
-		dir = await mkdtemp(join(tmpdir(), "openmdr-serve-"))
+		dir = await mkdtemp(join(tmpdir(), "house-serve-"))
 		const file = join(dir, "a.md")
 		await writeFile(file, "# v1\n")
 		handle = startServer({ path: file })
@@ -95,7 +95,7 @@ describe("startServer", () => {
 	})
 
 	test("404s unknown paths", async () => {
-		dir = await mkdtemp(join(tmpdir(), "openmdr-serve-"))
+		dir = await mkdtemp(join(tmpdir(), "house-serve-"))
 		const file = join(dir, "a.md")
 		await writeFile(file, "x")
 		handle = startServer({ path: file })

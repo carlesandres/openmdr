@@ -1,10 +1,14 @@
-# openmdr
+# house
+
+> **Renamed from `openmdr`.** The old npm package `@carlesandres/openmdr`
+> is deprecated; install `@carlesandres/house` instead. The CLI binary is
+> now `house` (was `openmdr`).
 
 A terminal markdown reader built on [opentui](https://github.com/nicholasgasior/opentui).
 Point it at a directory and navigate its `.md` files without leaving the terminal.
 
 ```
-npx @carlesandres/openmdr docs/
+npx @carlesandres/house docs/
 ```
 
 Requires [Bun](https://bun.sh) on `PATH`.
@@ -12,23 +16,23 @@ Requires [Bun](https://bun.sh) on `PATH`.
 ## Install
 
 ```bash
-npm install -g @carlesandres/openmdr
+npm install -g @carlesandres/house
 # or
-bun add -g @carlesandres/openmdr
+bun add -g @carlesandres/house
 ```
 
 ## Upgrade
 
 ```bash
-npm update -g @carlesandres/openmdr
+npm update -g @carlesandres/house
 # or
-bun add -g @carlesandres/openmdr
+bun add -g @carlesandres/house
 ```
 
 ## Usage
 
 ```
-openmdr [options] <path>
+house [options] <path>
 ```
 
 `<path>` can be a directory (walks for `.md` files) or a single `.md` file.

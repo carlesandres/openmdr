@@ -95,7 +95,7 @@ export const loadBundledThemes = (): Map<string, ThemeDefinition> => {
 
 /**
  * Stub for user-supplied themes. A future release will load these from the
- * XDG config dir and from project-local `.openmdr/themes/`. Until then,
+ * XDG config dir and from project-local `.house/themes/`. Until then,
  * returns an empty map.
  */
 export const loadUserThemes = async (): Promise<Map<string, ThemeDefinition>> => {

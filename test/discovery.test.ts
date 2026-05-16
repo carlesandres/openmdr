@@ -8,7 +8,7 @@ import { DiscoveryError, walk } from "../src/discovery/walk.ts"
 type FixtureSpec = Record<string, string>
 
 const buildFixture = async (spec: FixtureSpec): Promise<string> => {
-	const root = await mkdtemp(join(tmpdir(), "openmdr-discovery-"))
+	const root = await mkdtemp(join(tmpdir(), "house-discovery-"))
 	for (const [relPath, content] of Object.entries(spec)) {
 		const abs = join(root, relPath)
 		await mkdir(dirname(abs), { recursive: true })

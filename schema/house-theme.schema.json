@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://openmdr.dev/theme.json",
-  "title": "openmdr theme",
-  "description": "A theme definition for openmdr. Compatible-ish with opencode TUI themes minus the diff* token cluster.",
+  "$id": "https://github.com/carlesandres/house/blob/main/schema/house-theme.schema.json",
+  "title": "house theme",
+  "description": "A theme definition for house. Compatible-ish with opencode TUI themes minus the diff* token cluster.",
   "type": "object",
   "required": ["theme"],
   "properties": {

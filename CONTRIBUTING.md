@@ -1,6 +1,6 @@
-# Contributing to openmdr
+# Contributing to house
 
-Thanks for considering a contribution. openmdr is a small project; the bar
+Thanks for considering a contribution. house is a small project; the bar
 for changes is "reads cleanly, fits the design, doesn't accidentally bind a
 reserved key." This doc covers the local loop and the rules that aren't
 obvious from the code.

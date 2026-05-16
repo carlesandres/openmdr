@@ -14,7 +14,7 @@ export type ColorValue = HexColor | RefName | { readonly dark: string; readonly 
 export type Tone = "dark" | "light"
 
 /**
- * The complete openmdr token surface. Adapted from opencode's TUI theme
+ * The complete house token surface. Adapted from opencode's TUI theme
  * (see reference/opencode/.../tui/context/theme/) by dropping the `diff*`
  * cluster, `backgroundMenu`, and `thinkingOpacity` (none of which are
  * reachable in a markdown reader).
