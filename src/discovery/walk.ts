@@ -12,9 +12,13 @@ export interface FileEntry {
 	readonly name: string
 }
 
+export type SortOrder = "dirs-first" | "files-first"
+
 export interface WalkOptions {
 	/** Include hidden files and gitignored entries. Hard skips still apply. */
 	readonly all?: boolean
+	/** Group order within each directory. Default `dirs-first`. */
+	readonly sort?: SortOrder
 }
 
 export class DiscoveryError extends Data.TaggedError("DiscoveryError")<{
@@ -55,11 +59,15 @@ const tryLoadGitignore = async (dir: string): Promise<Ignore | null> => {
 
 const sortEntries = <T extends { name: string; isDirectory: () => boolean }>(
 	entries: readonly T[],
+	order: SortOrder,
 ): T[] =>
 	[...entries].sort((a, b) => {
 		const aDir = a.isDirectory()
 		const bDir = b.isDirectory()
-		if (aDir !== bDir) return aDir ? -1 : 1
+		if (aDir !== bDir) {
+			if (order === "files-first") return aDir ? 1 : -1
+			return aDir ? -1 : 1
+		}
 		return a.name.localeCompare(b.name)
 	})
 
@@ -68,7 +76,7 @@ const walkDir = async (
 	rootPath: string,
 	parentLevels: readonly IgnoreLevel[],
 	results: FileEntry[],
-	opts: { all: boolean },
+	opts: { all: boolean; sort: SortOrder },
 ): Promise<void> => {
 	let levels = parentLevels
 	if (!opts.all) {
@@ -77,7 +85,7 @@ const walkDir = async (
 	}
 
 	const raw = await readdir(dirPath, { withFileTypes: true })
-	for (const entry of sortEntries(raw)) {
+	for (const entry of sortEntries(raw, opts.sort)) {
 		// Never follow symlinks — cycle hazard, and a markdown reader doesn't
 		// need them. May be relaxed (files only) in a later iteration.
 		if (entry.isSymbolicLink()) continue
@@ -114,7 +122,8 @@ const walkDir = async (
  * - Hidden files/dirs (leading `.`) skipped unless `all: true`.
  * - `.gitignore` honored, including nested `.gitignore` files.
  * - Symlinks not followed.
- * - Sort: directories before files, alphabetical within each group.
+ * - Sort: alphabetical within each group; directories before files
+ *   (`dirs-first`, default) or files before directories (`files-first`).
  */
 export const walk = (
 	root: string,
@@ -124,7 +133,10 @@ export const walk = (
 		try: async () => {
 			const absRoot = resolve(root)
 			const results: FileEntry[] = []
-			await walkDir(absRoot, absRoot, [], results, { all: options.all ?? false })
+			await walkDir(absRoot, absRoot, [], results, {
+				all: options.all ?? false,
+				sort: options.sort ?? "dirs-first",
+			})
 			return results
 		},
 		catch: (cause) => new DiscoveryError({ root, cause }),

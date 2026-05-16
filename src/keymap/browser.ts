@@ -13,10 +13,12 @@ export interface BrowserCtx {
 	readonly focus: BrowserFocus
 	readonly sidebarVisible: boolean
 	readonly helpVisible: boolean
+	readonly filterOpen: boolean
 	readonly setFocus: (next: BrowserFocus | ((prev: BrowserFocus) => BrowserFocus)) => void
 	readonly setSelectedIndex: (updater: (prev: number) => number) => void
 	readonly setSidebarVisible: (updater: (prev: boolean) => boolean) => void
 	readonly setHelpVisible: (updater: (prev: boolean) => boolean) => void
+	readonly openFilter: () => void
 	readonly cycleTheme: (delta: 1 | -1) => void
 	readonly toggleTone: () => void
 	readonly quit: () => void
@@ -35,6 +37,7 @@ const stepBy = (c: BrowserCtx, delta: number) =>
 	c.setSelectedIndex((i) => clamp(i + delta, 0, lastIndex(c)))
 
 const inSidebar = (c: BrowserCtx) => c.focus === "sidebar"
+const inSidebarFilterClosed = (c: BrowserCtx) => inSidebar(c) && !c.filterOpen
 const inReader = (c: BrowserCtx) => c.focus === "reader"
 const inSidebarWithFiles = (c: BrowserCtx) => inSidebar(c) && haveFiles(c)
 const inReaderWithFiles = (c: BrowserCtx) => inReader(c) && haveFiles(c)
@@ -78,6 +81,15 @@ export const browserBindings: readonly KeyBinding<BrowserCtx>[] = [
 		hint: "help",
 		keys: ["?"],
 		run: (c) => c.setHelpVisible((v) => !v),
+	},
+	{
+		id: "filter.open",
+		group: "Sidebar",
+		description: "Filter files (fuzzy match on path)",
+		hint: "filter",
+		keys: ["/"],
+		when: inSidebarFilterClosed,
+		run: (c) => c.openFilter(),
 	},
 	{
 		id: "serve.current",

@@ -29,6 +29,10 @@ export interface FooterProps<C> {
 	readonly ctx: C
 	readonly width: number
 	readonly notice?: string | null
+	/** When set, the footer row turns into the filter input — `/<query>▏` —
+	 *  and suppresses both the hint row and the notice. Mirrors hunk's
+	 *  StatusBar: one row of chrome, content swaps by state. */
+	readonly filter?: { readonly query: string } | null
 }
 
 const HINT_SEPARATOR = "  "
@@ -84,38 +88,64 @@ const fitHints = (hints: readonly string[], width: number): string => {
 	return firstKey.slice(0, width)
 }
 
-export const Footer = <C,>({ bindings, ctx, width, notice }: FooterProps<C>) => {
+/** Hints shown alongside the filter input. Mirrors the modal-mode key
+ *  handler in `Browser.tsx`; if those bindings change, update both. */
+const FILTER_HINTS = "↵:open  esc:cancel"
+/** Minimum gap between the filter input and its hints on the same row. */
+const FILTER_HINT_GAP = 2
+
+export const Footer = <C,>({ bindings, ctx, width, notice, filter }: FooterProps<C>) => {
 	const usableWidth = Math.max(0, width - 2) // 1-cell horizontal padding each side
 
-	const content = notice
+	const rowStyle = {
+		width,
+		height: FOOTER_HEIGHT,
+		flexShrink: 0,
+		flexDirection: "row",
+		paddingLeft: 1,
+		paddingRight: 1,
+		backgroundColor: colors.background,
+	} as const
+
+	// Filter mode is two-column: input left, hints right, separated by a
+	// flex-grow spacer. Hints drop entirely on narrow viewports rather than
+	// pushing the input off-screen — the input is the primary surface.
+	if (filter) {
+		const input = `/${filter.query}▏`
+		const showHints = input.length + FILTER_HINT_GAP + FILTER_HINTS.length <= usableWidth
+		return (
+			<box style={rowStyle}>
+				<text content={input} wrapMode="none" style={{ fg: colors.textStrong }} />
+				{showHints && (
+					<>
+						<box style={{ flexGrow: 1 }} />
+						<text content={FILTER_HINTS} wrapMode="none" style={{ fg: colors.textMuted }} />
+					</>
+				)}
+			</box>
+		)
+	}
+
+	const hintContent = fitHints(
+		bindings
+			.filter((b) => (b.when ? b.when(ctx) : true))
+			.map(formatHint)
+			.filter((s): s is string => s !== null),
+		usableWidth,
+	)
+	const noticeContent = notice
 		? notice.length > usableWidth
 			? notice.slice(0, usableWidth)
 			: notice
-		: fitHints(
-				bindings
-					.filter((b) => (b.when ? b.when(ctx) : true))
-					.map(formatHint)
-					.filter((s): s is string => s !== null),
-				usableWidth,
-			)
+		: null
+
+	// Notice > hints. Notice fg is strong; hints are muted.
+	const content = noticeContent ?? hintContent
+	const fg = noticeContent ? colors.textStrong : colors.textMuted
 
 	return (
-		<box
-			style={{
-				width,
-				height: FOOTER_HEIGHT,
-				flexShrink: 0,
-				flexDirection: "row",
-				paddingLeft: 1,
-				paddingRight: 1,
-				backgroundColor: colors.background,
-			}}
-		>
-			<text
-				content={content}
-				wrapMode="none"
-				style={{ fg: notice ? colors.textStrong : colors.textMuted }}
-			/>
+		<box style={rowStyle}>
+			<text content={content} wrapMode="none" style={{ fg }} />
 		</box>
 	)
 }

@@ -11,6 +11,8 @@ export interface ParsedArgs {
 	readonly width: string | null
 	/** True when `--all` was passed: include hidden + gitignored files in discovery. */
 	readonly all: boolean
+	/** Value of `--sort <mode>` (`dirs-first` or `files-first`), or null. Validated by the boot layer. */
+	readonly sort: string | null
 	/** True when `--serve` was passed: serve the given file as HTML, skip TUI. */
 	readonly serve: boolean
 	/** Value of `--port <N>`, or null. Validated by the boot layer. */
@@ -34,6 +36,7 @@ export const parseArgv = (argv: readonly string[]): ParsedArgs => {
 	let tone: string | null = null
 	let width: string | null = null
 	let all = false
+	let sort: string | null = null
 	let serve = false
 	let port: string | null = null
 	let help = false
@@ -57,6 +60,10 @@ export const parseArgv = (argv: readonly string[]): ParsedArgs => {
 			case "--all":
 				all = true
 				continue
+			case "--sort":
+				sort = argv[i + 1] ?? null
+				i++
+				continue
 			case "--serve":
 				serve = true
 				continue
@@ -78,7 +85,7 @@ export const parseArgv = (argv: readonly string[]): ParsedArgs => {
 		}
 	}
 
-	return { path, theme, tone, width, all, serve, port, help, version }
+	return { path, theme, tone, width, all, sort, serve, port, help, version }
 }
 
 const themeList = themeDefinitions.map((t) => t.id).join(", ")
@@ -92,6 +99,7 @@ options:
   --tone <mode>  dark or light (default: dark)
   --width <N>    cap rendered markdown width at N columns
   --all          include hidden and gitignored files in discovery
+  --sort <mode>  sidebar order: dirs-first (default) or files-first
   --serve        serve the given file as HTML in the browser (skips TUI)
   --port <N>     port for --serve (default: OS-assigned)
   -h, --help     show this help and exit

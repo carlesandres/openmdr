@@ -15,6 +15,7 @@ import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
 import { useAtomValue, useAtomSet } from "@effect/atom-react"
 import { Effect } from "effect"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { filterFiles } from "./discovery/filter.ts"
 import { type FileEntry } from "./discovery/walk.ts"
 import { Footer, FOOTER_HEIGHT } from "./Footer.tsx"
 import { HelpOverlay } from "./HelpOverlay.tsx"
@@ -74,6 +75,14 @@ export const Browser = ({
 	const [sidebarVisible, setSidebarVisible] = useState<boolean>(true)
 	const [sidebarScroll, setSidebarScroll] = useState<number>(0)
 	const [helpVisible, setHelpVisible] = useState<boolean>(false)
+	const [filterOpen, setFilterOpen] = useState<boolean>(false)
+	const [filterQuery, setFilterQuery] = useState<string>("")
+	// Mirror filter state into refs so the keyboard handler sees synchronous
+	// updates even when multiple keys arrive in a single React batch (the
+	// first key opens the filter; subsequent keys in the same tick would
+	// otherwise still observe filterOpen=false through closure).
+	const filterOpenRef = useRef(false)
+	const filterQueryRef = useRef("")
 	const [footerNotice, setFooterNotice] = useState<string | null>(null)
 	const serverRef = useRef<ServerHandle | null>(null)
 
@@ -111,7 +120,18 @@ export const Browser = ({
 		setFooterNotice(`tone: ${nextTone}`)
 	}
 
-	const selected = files[selectedIndex]
+	const displayedFiles = useMemo(() => filterFiles(files, filterQuery), [files, filterQuery])
+
+	// When the filtered list shrinks, keep selectedIndex valid. The reset to 0
+	// on every query change happens in the keystroke handler, not here, so a
+	// no-op rerender doesn't snap the cursor back to the top.
+	useEffect(() => {
+		if (selectedIndex >= displayedFiles.length) {
+			setSelectedIndex(displayedFiles.length === 0 ? 0 : displayedFiles.length - 1)
+		}
+	}, [displayedFiles.length, selectedIndex])
+
+	const selected = displayedFiles[selectedIndex]
 
 	// Track the path whose content is currently rendered. Updated lazily via
 	// a debounce: rapid j/k presses don't trigger a load+<markdown>-reflow
@@ -155,19 +175,28 @@ export const Browser = ({
 	// One BrowserCtx per render, reused by the keyboard handler and the
 	// footer's `when`-evaluation. Keeping a single object eliminates the
 	// drift risk between the two consumers as BrowserCtx grows.
+	//
+	// `files` in ctx refers to the *displayed* list (post-filter) so that
+	// keymap when-clauses like `haveFiles` and selection-index actions
+	// operate on what the user actually sees.
 	const ctx: BrowserCtx = {
-		files,
+		files: displayedFiles,
 		focus,
 		sidebarVisible,
 		helpVisible,
+		filterOpen,
 		setFocus,
 		setSelectedIndex,
 		setSidebarVisible,
 		setHelpVisible,
+		openFilter: () => {
+			filterOpenRef.current = true
+			setFilterOpen(true)
+		},
 		cycleTheme,
 		toggleTone,
 		serveCurrent: () => {
-			const file = files[selectedIndex]
+			const file = displayedFiles[selectedIndex]
 			if (!file) return
 			let handle = serverRef.current
 			if (!handle) {
@@ -202,6 +231,72 @@ export const Browser = ({
 	}
 
 	useKeyboard((key) => {
+		// Filter modal: capture keystrokes for the input. Esc closes and
+		// clears; Return closes, clears, and focuses the reader (open the
+		// match); Backspace edits; Up/Down navigate the filtered list;
+		// printable characters extend the query and reset selection to 0.
+		// Everything else is swallowed so normal bindings (j/k as nav,
+		// `s`, `t`, …) don't fire while the user is typing. This sits
+		// outside the data-driven keymap for the same reason the help
+		// branch does — see DESIGN.md §12.
+		if (filterOpenRef.current) {
+			// One close path used by both Esc and Return. Closing the filter
+			// restores the full list; translating the highlighted match to
+			// its index in `files` keeps the cursor on whatever the user was
+			// looking at when they hit the key, instead of landing on a
+			// random file at the same numeric position in a now-different
+			// list. `focusReader=true` is the Return semantic (open the
+			// match); false is Esc (cancel, stay in sidebar).
+			//
+			// Centralized so the dual filterOpenRef / filterOpen invariant
+			// only has to be maintained in one place (plus `openFilter`).
+			const closeFilter = (focusReader: boolean) => {
+				const picked = displayedFiles[selectedIndex] ?? null
+				filterOpenRef.current = false
+				filterQueryRef.current = ""
+				setFilterOpen(false)
+				setFilterQuery("")
+				if (picked) {
+					const fullIdx = files.findIndex((f) => f.path === picked.path)
+					if (fullIdx >= 0) setSelectedIndex(() => fullIdx)
+				}
+				if (focusReader && picked) setFocus("reader")
+			}
+			if (key.name === "escape") {
+				closeFilter(false)
+				return
+			}
+			if (key.name === "return") {
+				closeFilter(true)
+				return
+			}
+			if (key.name === "backspace") {
+				filterQueryRef.current = filterQueryRef.current.slice(0, -1)
+				setFilterQuery(filterQueryRef.current)
+				setSelectedIndex(() => 0)
+				return
+			}
+			if (key.name === "up") {
+				setSelectedIndex((i) => Math.max(0, i - 1))
+				return
+			}
+			if (key.name === "down") {
+				setSelectedIndex((i) => Math.min(Math.max(0, displayedFiles.length - 1), i + 1))
+				return
+			}
+			if (key.ctrl || key.meta) return
+			let char: string | null = null
+			if (key.name === "space") char = " "
+			else if (typeof key.name === "string" && key.name.length === 1) {
+				char = key.shift ? key.name.toUpperCase() : key.name
+			}
+			if (char !== null) {
+				filterQueryRef.current = filterQueryRef.current + char
+				setFilterQuery(filterQueryRef.current)
+				setSelectedIndex(() => 0)
+			}
+			return
+		}
 		// While help is open, swallow most keys: only ? (toggle), esc
 		// (close), and the theme bindings pass through. Theme keys stay live
 		// so users can preview palette changes against the overlay itself —
@@ -242,7 +337,7 @@ export const Browser = ({
 	// dominates the per-keystroke cost.
 	// Sidebar box adds top/bottom borders (2); footer eats FOOTER_HEIGHT.
 	const sidebarBodyHeight = Math.max(1, height - 2 - FOOTER_HEIGHT)
-	const maxScroll = Math.max(0, files.length - sidebarBodyHeight)
+	const maxScroll = Math.max(0, displayedFiles.length - sidebarBodyHeight)
 	const desiredScroll = (() => {
 		let s = sidebarScroll
 		if (selectedIndex < s) s = selectedIndex
@@ -252,7 +347,7 @@ export const Browser = ({
 	useEffect(() => {
 		if (desiredScroll !== sidebarScroll) setSidebarScroll(desiredScroll)
 	}, [desiredScroll, sidebarScroll])
-	const visibleFiles = files.slice(desiredScroll, desiredScroll + sidebarBodyHeight)
+	const visibleFiles = displayedFiles.slice(desiredScroll, desiredScroll + sidebarBodyHeight)
 	// Available width for sidebar text rows: box width minus 1-cell border on each side.
 	const sidebarTextWidth = Math.max(4, sidebarWidth - 2)
 	// Right-anchored truncation: keep the filename visible, lose the prefix
@@ -291,8 +386,11 @@ export const Browser = ({
 							backgroundColor: colors.surface,
 						}}
 					>
-						{files.length === 0 ? (
-							<text content="(no markdown files)" style={{ fg: colors.textMuted }} />
+						{displayedFiles.length === 0 ? (
+							<text
+								content={files.length === 0 ? "(no markdown files)" : "(no matches)"}
+								style={{ fg: colors.textMuted }}
+							/>
 						) : (
 							visibleFiles.map((file, idx) => {
 								const realIdx = desiredScroll + idx
@@ -359,7 +457,13 @@ export const Browser = ({
 					)}
 				</box>
 			</box>
-			<Footer bindings={footerBindings} ctx={ctx} width={width} notice={footerNotice} />
+			<Footer
+				bindings={footerBindings}
+				ctx={ctx}
+				width={width}
+				notice={footerNotice}
+				filter={filterOpen ? { query: filterQuery } : null}
+			/>
 			{helpVisible && (
 				<HelpOverlay bindings={browserBindings} viewportWidth={width} viewportHeight={height} />
 			)}
