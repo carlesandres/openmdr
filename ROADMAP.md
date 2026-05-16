@@ -27,7 +27,6 @@ Glossary terms (e.g. `beta`) live in `CONTEXT.md`.
 
 | Item | Issue |
 |---|---|
-| Sort order of empty files in sidebar | [#21](https://github.com/carlesandres/house/issues/21) |
 | Theme cycling while help overlay is open | [#15](https://github.com/carlesandres/house/issues/15) (fixed in `bbd3e29`, verify and close) |
 
 ## File-level interactions
