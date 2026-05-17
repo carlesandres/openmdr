@@ -54,6 +54,11 @@ script, but orphaned `bun --watch src/index.tsx ...` processes can keep
 showing old behavior. Use `ps ... | rg 'bun (run )?dev|bun --watch
 src/index.tsx|src/index.tsx'` and `lsof -a -p <pid> -d cwd` to verify.
 
+For fenced code blocks, rely on opentui's built-in `<markdown>` renderer
+and keep `test/markdown-codeblock.test.tsx` covering tagged fences. Do
+not replace the markdown renderer or reintroduce a broad `renderNode`
+override unless DESIGN.md §12's custom-renderer trigger has fired.
+
 ## Local commands
 
 ```bash

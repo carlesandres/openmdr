@@ -44,12 +44,13 @@
 		"format": "oxfmt src/",
 		"format:check": "oxfmt --check src/",
 		"test": "bun test",
-		"build:themes": "bun run dev/build-themes.ts"
+		"build:themes": "bun run dev/build-themes.ts",
+		"repro:pty-codeblocks": "bun run dev/repro-pty-codeblocks.ts"
 	},
 	"dependencies": {
 		"@effect/atom-react": "4.0.0-beta.59",
-		"@opentui/core": "0.2.1",
-		"@opentui/react": "0.2.1",
+		"@opentui/core": "0.2.12",
+		"@opentui/react": "0.2.12",
 		"effect": "4.0.0-beta.59",
 		"ignore": "^7.0.5",
 		"marked": "^18.0.3",

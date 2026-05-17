@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, describe, expect, test } from "bun:test"
+import { readFileSync } from "node:fs"
 import { act } from "react"
 import React from "react"
 import { testRender } from "@opentui/react/test-utils"
@@ -27,6 +28,7 @@ afterEach(() => {
 })
 
 const VIEWPORT = { width: 120, height: 30 }
+const README = readFileSync("README.md", "utf8")
 
 const makeFiles = (relativePaths: readonly string[]): FileEntry[] =>
 	relativePaths.map((rel) => ({
@@ -107,6 +109,14 @@ describe("Browser — sidebar", () => {
 const readerTitleContains = (frame: string, name: string): boolean =>
 	// Active reader title: " ▸ <name> ". Inactive: "   <name> " (3 leading spaces).
 	frame.includes(`▸ ${name} `) || frame.includes(`   ${name} `)
+
+const settleBrowser = async () => {
+	await act(async () => {
+		await new Promise<void>((resolve) => setTimeout(resolve, 120))
+	})
+	await setup!.renderer.idle()
+	await stepFrame(setup!.renderOnce)
+}
 
 describe("Browser — selection", () => {
 	test("opens the initially selected file in the reader pane", async () => {
@@ -218,6 +228,41 @@ describe("Browser — selection", () => {
 		})
 		await stepFrame(setup!.renderOnce)
 		expect(readerTitleContains(setup!.captureCharFrame(), "a.md")).toBe(true)
+	})
+
+	test("README fenced code blocks remain visible after navigating away and back", async () => {
+		const files = makeFiles(["README.md", "notes.md"])
+		await act(async () => {
+			setup = await renderBrowser(
+				<Browser
+					files={files}
+					readFile={makeReader({
+						"README.md": README,
+						"notes.md": "# Notes\n\nNo code here.\n",
+					})}
+					onQuit={() => {}}
+				/>,
+				{ width: 160, height: 40 },
+			)
+		})
+		await settleBrowser()
+		expect(setup!.captureCharFrame()).toContain("npm install -g @carlesandres/house")
+
+		await act(async () => {
+			setup!.mockInput.pressKey("j")
+		})
+		await settleBrowser()
+		expect(readerTitleContains(setup!.captureCharFrame(), "notes.md")).toBe(true)
+
+		await act(async () => {
+			setup!.mockInput.pressKey("k")
+		})
+		await settleBrowser()
+
+		const frame = setup!.captureCharFrame()
+		expect(readerTitleContains(frame, "README.md")).toBe(true)
+		expect(frame).toContain("npm install -g @carlesandres/house")
+		expect(frame).toContain("bun add -g @carlesandres/house")
 	})
 })
 
@@ -1293,12 +1338,7 @@ describe("Browser — filter modal", () => {
 	test("up/down arrows navigate the filtered list", async () => {
 		// 3 matches for "doc": docs/a.md, docs/b.md, docs/c.md. Down-arrow
 		// twice → cursor on filtered[2]; Return opens that file.
-		const files = makeFiles([
-			"docs/a.md",
-			"docs/b.md",
-			"docs/c.md",
-			"unrelated.md",
-		])
+		const files = makeFiles(["docs/a.md", "docs/b.md", "docs/c.md", "unrelated.md"])
 		await act(async () => {
 			setup = await renderBrowser(
 				<Browser
