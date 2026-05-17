@@ -74,7 +74,9 @@ v1 ships when:
    unconditionally, and does not follow symlinks.
 3. Selecting a file renders it in the reader pane with support for: headings,
    paragraphs, lists (ordered, unordered, nested), blockquotes, GFM tables, inline
-   emphasis (bold/italic/strike), inline code, links (rendered, not followed),
+   emphasis (bold, italic, and strike — strike rendered as dim/muted because
+   opentui's syntax-style API has no strikethrough attribute), inline code,
+   links (rendered, not followed),
    images-as-alt-text, horizontal rules, fenced code blocks, including
    language-tagged fences.
 4. The keymap in §7.2 works end-to-end, including the help overlay.
@@ -294,8 +296,13 @@ A `bun run bench` script checks these against a fixture corpus checked into
 
 ### 10.2 Tests
 
-- Every markdown node type the renderer claims to support has at least one
-  snapshot test of its `opentui` output.
+- The theme's tree-sitter scope map (`buildSyntaxMap` in
+  `src/theme/colors.ts`) has an entry for every markdown node type §5.1.3
+  promises. This is the integration surface we own; opentui's own test
+  suite covers the renderer end. Regression-style tests for *our* uses
+  of `<markdown>` (e.g. the code-block invisibility bug in
+  `test/markdown-codeblock.test.tsx`) are kept as targeted coverage,
+  not blanket per-node snapshots.
 - Every keymap binding has at least one integration test (boot TUI, send keys,
   assert state).
 - Discovery edge cases covered: `.gitignore`, nested `.gitignore`, hidden files,
