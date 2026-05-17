@@ -46,8 +46,9 @@ house [options] <path>
 |-----|--------|
 | `q` / `ctrl+c` | Quit |
 | `tab` | Toggle focus (sidebar ↔ reader) |
-| `\` | Toggle sidebar visibility |
+| `s` | Toggle sidebar visibility |
 | `?` | Show / dismiss help overlay |
+| `o` | Open current file in browser as HTML |
 | `t` | Next theme |
 | `T` | Previous theme |
 | `L` | Toggle dark / light tone |
@@ -58,12 +59,13 @@ house [options] <path>
 |-----|--------|
 | `j` / `↓` | Move selection down |
 | `k` / `↑` | Move selection up |
-| `J` | Jump down 10 |
-| `K` | Jump up 10 |
-| `space` / `ctrl+d` | Page down |
-| `b` / `ctrl+u` | Page up |
+| `J` | Jump down 8 |
+| `K` | Jump up 8 |
+| `space` / `pagedown` / `ctrl+d` | Page down |
+| `b` / `pageup` / `ctrl+u` | Page up |
 | `g` | First file |
 | `G` | Last file |
+| `/` | Filter files (fuzzy match on path) |
 | `↵` / `→` / `l` | Open file (focus reader) |
 
 ### Reader
