@@ -75,7 +75,8 @@ v1 ships when:
 3. Selecting a file renders it in the reader pane with support for: headings,
    paragraphs, lists (ordered, unordered, nested), blockquotes, GFM tables, inline
    emphasis (bold/italic/strike), inline code, links (rendered, not followed),
-   images-as-alt-text, horizontal rules, fenced code blocks (plain).
+   images-as-alt-text, horizontal rules, fenced code blocks, including
+   language-tagged fences.
 4. The keymap in §7.2 works end-to-end, including the help overlay.
 5. Dark and light themes ship; `--theme dark|light` selects (default `dark`).
    Terminal-background auto-detect is deferred to beta (§12).

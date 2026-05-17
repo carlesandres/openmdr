@@ -48,8 +48,8 @@
 	},
 	"dependencies": {
 		"@effect/atom-react": "4.0.0-beta.59",
-		"@opentui/core": "0.2.1",
-		"@opentui/react": "0.2.1",
+		"@opentui/core": "0.2.12",
+		"@opentui/react": "0.2.12",
 		"effect": "4.0.0-beta.59",
 		"ignore": "^7.0.5",
 		"marked": "^18.0.3",

@@ -103,7 +103,7 @@ in-process renderer doesn't model) — and prefer adding a minimal
 reproducer to the opentui test suite over carrying a PTY harness
 here.
 
-### Before blaming `<markdown>` rendering
+### Before changing markdown rendering
 
 If `bun dev` and `bun run dev` appear to render differently, first check
 for stale watchers. Bun expands both forms to the package `dev` script
@@ -123,10 +123,13 @@ Then inspect any suspicious process with:
 lsof -a -p <pid> -d cwd
 ```
 
-The red herring to avoid: replacing opentui's markdown code-block path
-with a custom `renderNode` override just because a running TUI looks
-stale. First reproduce in-process with `testRender`, `renderer.idle()`,
-and `captureSpans()` against the current checkout.
+Do not replace opentui's markdown renderer wholesale just because a
+running TUI looks stale. First reproduce in-process with `testRender`,
+`renderer.idle()`, and `captureSpans()` against the current checkout.
+
+Tagged fenced-code blocks are covered by `test/markdown-codeblock.test.tsx`.
+If a future opentui upgrade regresses them, prefer a focused upstream-style
+reproducer over adding a custom parser or custom `renderNode` tree.
 
 ## Keymap changes
 

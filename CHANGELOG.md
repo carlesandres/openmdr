@@ -12,6 +12,14 @@ file is the curated, narrative version.
 
 ## [Unreleased]
 
+### Fixed
+
+- Language-tagged fenced code blocks no longer disappear while markdown
+  highlighting settles. `house` now uses opentui `0.2.12`, which includes
+  markdown/code-block rendering fixes, and the browser pane no longer
+  remounts markdown for one file while still holding another file's loaded
+  content.
+
 ## [0.3.0] — 2026-05-16
 
 ### Changed

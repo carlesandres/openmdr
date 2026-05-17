@@ -69,7 +69,7 @@ export const Browser = ({
 	const [selectedIndex, setSelectedIndex] = useState(() =>
 		clamp(initialIndex, 0, Math.max(0, files.length - 1)),
 	)
-	const [content, setContent] = useState<string>("")
+	const [loaded, setLoaded] = useState<{ path: string; content: string } | null>(null)
 	const [error, setError] = useState<string | null>(null)
 	const [focus, setFocus] = useState<"sidebar" | "reader">("sidebar")
 	const [sidebarVisible, setSidebarVisible] = useState<boolean>(true)
@@ -121,7 +121,6 @@ export const Browser = ({
 	}
 
 	const displayedFiles = useMemo(() => filterFiles(files, filterQuery), [files, filterQuery])
-
 	// When the filtered list shrinks, keep selectedIndex valid. The reset to 0
 	// on every query change happens in the keystroke handler, not here, so a
 	// no-op rerender doesn't snap the cursor back to the top.
@@ -149,20 +148,20 @@ export const Browser = ({
 
 	useEffect(() => {
 		if (!renderedPath) {
-			setContent("")
+			setLoaded(null)
 			return
 		}
 		let cancelled = false
 		readFile(renderedPath).then(
 			(text) => {
 				if (!cancelled) {
-					setContent(text)
+					setLoaded({ path: renderedPath, content: text })
 					setError(null)
 				}
 			},
 			(err: unknown) => {
 				if (!cancelled) {
-					setContent("")
+					setLoaded(null)
 					setError(`Cannot read ${renderedPath}: ${String(err)}`)
 				}
 			},
@@ -330,6 +329,7 @@ export const Browser = ({
 	const sidebarTitle = sidebarActive ? " ▸ files " : "   files "
 	const readerLabel = selected?.relativePath ?? title
 	const readerTitle = readerActive ? ` ▸ ${readerLabel} ` : `   ${readerLabel} `
+	const content = loaded?.path === renderedPath ? loaded.content : ""
 
 	// Sidebar virtualization: render only the visible window. Without this,
 	// every keystroke re-renders all N file rows even though only the bg of

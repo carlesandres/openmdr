@@ -151,4 +151,13 @@ describe("fenced code block — rendering pipeline", () => {
 		expect(span).toBeDefined()
 		expect(sameColor(span!.fg, span!.bg)).toBe(false)
 	})
+
+	test("inside app scrollbox: tagged fence renders before highlighting resolves", async () => {
+		const mock = new MockTreeSitterClient()
+
+		await mountAppLayoutWithFence("bash", mock)
+
+		expect(mock.isHighlighting()).toBe(true)
+		expect(setup!.captureCharFrame()).toContain(PAYLOAD)
+	})
 })
