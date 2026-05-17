@@ -12,6 +12,10 @@ file is the curated, narrative version.
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-05-17
+
+Beta release gates (DESIGN §10.2) closed.
+
 ### Fixed
 
 - Language-tagged fenced code blocks no longer disappear while markdown
@@ -19,6 +23,26 @@ file is the curated, narrative version.
   markdown/code-block rendering fixes, and the browser pane no longer
   remounts markdown for one file while still holding another file's loaded
   content.
+- Strikethrough text (`~~strike~~`) now renders distinctly (dim + muted
+  foreground) instead of as plain body text. opentui's syntax-style API
+  has no true strikethrough attribute; this is the closest visual we can
+  produce, documented in DESIGN §5.1.
+
+### Changed
+
+- Reduced re-renders and allocations in `Browser` / `Footer` hot paths.
+- DESIGN §10.2 test gate rephrased to target the integration surface
+  house owns (the tree-sitter scope map) rather than re-testing opentui's
+  renderer; `test/theme-syntax-map.test.ts` enforces scope coverage for
+  every node type §5.1.3 promises.
+
+### Docs
+
+- README embeds a VHS-generated demo gif; `tape/` holds the source
+  scripts.
+- `CONTRIBUTING.md` documents the `captureSpans()` / `MockTreeSitterClient`
+  / `TestRecorder` testing patterns and the "before blaming `<markdown>`"
+  stale-watcher debugging checklist.
 
 ## [0.3.0] — 2026-05-16
 
