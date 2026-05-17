@@ -60,6 +60,49 @@ Add tests alongside features. We don't enforce coverage, but every
 keymap binding should have at least one integration test (see §10.2 of
 DESIGN.md for the v2 gate).
 
+### Validating rendered output deeper than text
+
+`captureCharFrame()` returns characters only. For bugs where the
+character is correct but the *style* isn't — code block rendered with
+`bg == fg` so it looks invisible, span dropped to zero width, wrong
+attribute applied — reach for `captureSpans()` instead. It returns
+`{ cols, rows, cursor, lines: [{ spans: [{ text, fg, bg, attributes,
+width }] }] }`, which lets you assert on colors and widths.
+
+Three other primitives from `@opentui/core/testing` are worth knowing:
+
+- `renderer.idle()` — awaits *all* pending async work (tree-sitter
+  highlights, layout reflow). Prefer this over a loop of
+  `renderOnce()` whenever the component you're testing kicks off
+  async work. `renderOnce()` only flushes one paint; `idle()` waits
+  for the system to actually settle.
+- `MockTreeSitterClient` — pass it via the `treeSitterClient` prop on
+  `<markdown>` (or any `<code>`) to take the highlighter out of the
+  loop. `setMockResult({ highlights, warning })` controls what
+  `highlightOnce` returns, and `resolveAllHighlightOnce()` releases
+  pending calls on demand. This is how you simulate "no parser for
+  this language" deterministically. Real wasm loading is flaky in
+  tests; mocking it is not.
+- `TestRecorder` — `new TestRecorder(renderer); recorder.rec(); ...
+  recorder.stop()` captures every intermediate frame. Use it when you
+  suspect a "renders then disappears" race, or when you need to
+  compare frame *N* vs. frame *N+1*.
+
+`test/markdown-codeblock.test.tsx` is the worked example. opentui's
+own `Markdown.code-colors.test.ts` (under `reference/opentui/`) is the
+canonical pattern reference.
+
+### When you reach for a PTY, stop
+
+Spawning house under `script(1)` to capture real terminal output is
+slower, brittle, and gives you characters but not colors. The
+`captureSpans()` path above is strictly more powerful for everything
+we care about. Keep PTY-based testing in reserve for bugs that only
+manifest against a real terminal emulator (e.g. an OSC sequence the
+in-process renderer doesn't model) — and prefer adding a minimal
+reproducer to the opentui test suite over carrying a PTY harness
+here.
+
 ## Keymap changes
 
 Bindings are data: `src/keymap/browser.ts` is the single source for
