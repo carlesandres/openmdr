@@ -39,6 +39,21 @@ body has first-frame quirks under headless render. Some keys (Escape)
 need a ~60ms wait after press for opentui's parser to disambiguate
 `\x1b`.
 
+For deeper output validation (styled spans, async highlight pipelines,
+intermediate frames) use `captureSpans()`, `renderer.idle()`,
+`MockTreeSitterClient`, and `TestRecorder` — all from
+`@opentui/core/testing`. Worked example:
+`test/markdown-codeblock.test.tsx`. Full notes in
+`CONTRIBUTING.md` under "Validating rendered output deeper than
+text". Don't reach for PTY-based testing — `captureSpans` covers
+every case we have today.
+
+If `bun dev` and `bun run dev` seem to differ, check for stale watcher
+processes before changing renderer code. Both resolve to the `dev`
+script, but orphaned `bun --watch src/index.tsx ...` processes can keep
+showing old behavior. Use `ps ... | rg 'bun (run )?dev|bun --watch
+src/index.tsx|src/index.tsx'` and `lsof -a -p <pid> -d cwd` to verify.
+
 ## Local commands
 
 ```bash
