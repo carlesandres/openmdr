@@ -22,6 +22,7 @@ import { HelpOverlay } from "./HelpOverlay.tsx"
 import { readFileText } from "./io/readFile.ts"
 import { browserBindings, type BrowserCtx } from "./keymap/browser.ts"
 import { dispatch } from "./keymap/keymap.ts"
+import { renderMarkdownNode } from "./markdown/renderNode.ts"
 import { openInBrowser } from "./serve/openBrowser.ts"
 import { startServer, type ServerHandle } from "./serve/server.ts"
 import { colors, setActiveTheme } from "./theme/colors.ts"
@@ -451,6 +452,7 @@ export const Browser = ({
 								fg={colors.text}
 								bg={colors.background}
 								conceal
+								renderNode={renderMarkdownNode}
 								style={{ width: maxWidth ?? "100%" }}
 							/>
 						</scrollbox>

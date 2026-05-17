@@ -19,6 +19,7 @@ import { Browser } from "./Browser.tsx"
 import { parseArgv, usage } from "./cli/argv.ts"
 import { walk, type SortOrder } from "./discovery/walk.ts"
 import { readFileText } from "./io/readFile.ts"
+import { renderMarkdownNode } from "./markdown/renderNode.ts"
 import { openInBrowser } from "./serve/openBrowser.ts"
 import { startServer } from "./serve/server.ts"
 import { colors, setActiveTheme } from "./theme/colors.ts"
@@ -102,6 +103,7 @@ export const App = ({ content, title = "house", maxWidth = null, onQuit }: AppPr
 						fg={colors.text}
 						bg={colors.background}
 						conceal
+						renderNode={renderMarkdownNode}
 						style={{ width: maxWidth ?? "100%" }}
 					/>
 				</scrollbox>
