@@ -50,6 +50,9 @@ const buildSyntaxMap = (r: ResolvedTheme): Record<string, StyleDefinitionInput> 
 		"markup.bold": { fg: r.markdownStrong, bold: true },
 		"markup.strong": { fg: r.markdownStrong, bold: true },
 		"markup.italic": { fg: r.markdownEmph, italic: true },
+		// opentui's SyntaxStyle has no strikethrough attribute — best-effort:
+		// dim + muted color so `~~strike~~` is at least visually distinguishable.
+		"markup.strikethrough": { fg: r.textMuted, dim: true },
 		"markup.list": { fg: r.markdownListItem },
 		"markup.quote": { fg: r.markdownBlockQuote, italic: true },
 		"markup.raw": { fg: r.markdownCode, bg: codeBg },

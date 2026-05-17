@@ -126,13 +126,13 @@ export const Footer = <C,>({ bindings, ctx, width, notice, filter }: FooterProps
 		)
 	}
 
-	const hintContent = fitHints(
-		bindings
-			.filter((b) => (b.when ? b.when(ctx) : true))
-			.map(formatHint)
-			.filter((s): s is string => s !== null),
-		usableWidth,
-	)
+	const hints: string[] = []
+	for (const b of bindings) {
+		if (b.when && !b.when(ctx)) continue
+		const h = formatHint(b)
+		if (h !== null) hints.push(h)
+	}
+	const hintContent = fitHints(hints, usableWidth)
 	const noticeContent = notice
 		? notice.length > usableWidth
 			? notice.slice(0, usableWidth)

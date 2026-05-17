@@ -14,7 +14,7 @@ import { SyntaxStyle } from "@opentui/core"
 import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
 import { useAtomValue, useAtomSet } from "@effect/atom-react"
 import { Effect } from "effect"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { filterFiles } from "./discovery/filter.ts"
 import { type FileEntry } from "./discovery/walk.ts"
 import { Footer, FOOTER_HEIGHT } from "./Footer.tsx"
@@ -144,7 +144,7 @@ export const Browser = ({
 		if (target === renderedPath) return
 		const timer = setTimeout(() => setRenderedPath(target), 80)
 		return () => clearTimeout(timer)
-	}, [selected, renderedPath])
+	}, [selected?.path, renderedPath])
 
 	useEffect(() => {
 		if (!renderedPath) {
@@ -352,16 +352,25 @@ export const Browser = ({
 	const sidebarTextWidth = Math.max(4, sidebarWidth - 2)
 	// Right-anchored truncation: keep the filename visible, lose the prefix
 	// with a leading ellipsis when the path is too long.
-	const truncatePath = (s: string): string =>
-		s.length <= sidebarTextWidth ? s : "…" + s.slice(s.length - sidebarTextWidth + 1)
+	const truncatePath = useCallback(
+		(s: string): string =>
+			s.length <= sidebarTextWidth ? s : "…" + s.slice(s.length - sidebarTextWidth + 1),
+		[sidebarTextWidth],
+	)
 
 	// While help is open, the `?` key closes the overlay — relabel its hint
 	// so the footer accurately describes what pressing the key will do.
-	const footerBindings = helpVisible
-		? browserBindings
-				.filter((b) => HELP_ALLOWED_IDS.has(b.id))
-				.map((b) => (b.id === "help.toggle" ? { ...b, hint: "close" } : b))
-		: browserBindings
+	// Memoized: `helpVisible` changes rarely; `browserBindings` and
+	// `HELP_ALLOWED_IDS` are module-level constants.
+	const footerBindings = useMemo(
+		() =>
+			helpVisible
+				? browserBindings
+						.filter((b) => HELP_ALLOWED_IDS.has(b.id))
+						.map((b) => (b.id === "help.toggle" ? { ...b, hint: "close" } : b))
+				: browserBindings,
+		[helpVisible],
+	)
 
 	return (
 		<box style={{ width, height, flexDirection: "column", backgroundColor: colors.background }}>
