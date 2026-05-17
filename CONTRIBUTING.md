@@ -79,6 +79,26 @@ one: drop a new file in `src/theme/`, register it in
 `src/cli/argv.ts`. v2 has user-supplied stylesheets on the deferred
 list; until then, themes are TS values shipped with the binary.
 
+## Demo recordings
+
+`tape/` holds [VHS](https://github.com/charmbracelet/vhs) scripts that capture
+house running, for use as README hero assets.
+
+```bash
+brew install vhs            # one-time
+vhs tape/house.tape         # → tape/house.gif (animated demo)
+vhs tape/screenshot.tape    # → tape/house.png (still)
+```
+
+Both tapes invoke `bun run src/index.tsx .` against the repo's own markdown, so
+they don't need a published build or sample data. Tweak `Set Width` / `Set
+Height` / `Set FontSize` / `Sleep` durations inside the tape; change the
+`Output` extension (`.gif`, `.mp4`, `.webm`, `.png`) to switch format. Inside
+the tape, `Type "t"` cycles house's theme — distinct from `Set Theme`, which
+sets the *terminal* theme around it.
+
+After regenerating, commit the asset and update the embed in `README.md`.
+
 ## Patterns we deliberately did not adopt
 
 DESIGN.md §12 records design choices we deferred and the trigger that

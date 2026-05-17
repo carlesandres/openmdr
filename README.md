@@ -3,9 +3,7 @@
 A terminal markdown reader built on [opentui](https://github.com/anomalyco/opentui).
 Point it at a directory and navigate its `.md` files without leaving the terminal.
 
-```
-npx @carlesandres/house docs/
-```
+![house demo](tape/house.gif)
 
 Requires [Bun](https://bun.sh) on `PATH`.
 
