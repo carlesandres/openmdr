@@ -7,12 +7,9 @@
  * and assert on `captureSpans()` (which gives us text *and* fg/bg, so we
  * can tell "rendered with bg == fg" from "rendered with zero height").
  *
- * Each test simulates a specific tree-sitter response and asserts on the
- * resulting span:
- *  - successful highlight → text visible, fg/bg correct.
- *  - unsupported language (empty highlights + warning) → text still
- *    visible, inheriting markdown's fg/bg.
- *  - pending highlight (never resolved) → unstyled fallback still drawn.
+ * The tests simulate the cases that matter for house's v1 promise: fenced
+ * code blocks remain visible even when syntax highlighting is unavailable or
+ * still pending.
  */
 import { afterEach, beforeAll, describe, expect, test } from "bun:test"
 import { act } from "react"
@@ -20,7 +17,6 @@ import { SyntaxStyle } from "@opentui/core"
 import { MockTreeSitterClient } from "@opentui/core/testing"
 import { testRender } from "@opentui/react/test-utils"
 import type { CapturedFrame, CapturedSpan, RGBA } from "@opentui/core"
-import { renderMarkdownNode } from "../src/markdown/renderNode.ts"
 
 beforeAll(() => {
 	// @ts-expect-error — globalThis.IS_REACT_ACT_ENVIRONMENT is a React internal
@@ -87,7 +83,6 @@ const mountAppLayoutWithContent = async (content: string, mock: MockTreeSitterCl
 						fg={FG}
 						bg={BG}
 						conceal
-						renderNode={renderMarkdownNode}
 						style={{ width: "100%" }}
 						treeSitterClient={mock}
 					/>
@@ -147,19 +142,6 @@ describe("fenced code block — rendering pipeline", () => {
 	test("inside app scrollbox: unsupported language payload stays visible", async () => {
 		const mock = new MockTreeSitterClient()
 		mock.setMockResult({ highlights: [], warning: "No parser available for filetype bash" })
-
-		await mountAppLayoutWithFence("bash", mock)
-		mock.resolveAllHighlightOnce()
-		await setup!.renderer.idle()
-
-		const span = findSpan(setup!.captureSpans(), PAYLOAD)
-		expect(span).toBeDefined()
-		expect(sameColor(span!.fg, span!.bg)).toBe(false)
-	})
-
-	test("inside app scrollbox: app renderer keeps fenced code plain", async () => {
-		const mock = new MockTreeSitterClient()
-		mock.setMockResult({ highlights: [[0, PAYLOAD.length, "conceal", { conceal: "" }]] })
 
 		await mountAppLayoutWithFence("bash", mock)
 		mock.resolveAllHighlightOnce()

@@ -103,6 +103,31 @@ in-process renderer doesn't model) — and prefer adding a minimal
 reproducer to the opentui test suite over carrying a PTY harness
 here.
 
+### Before blaming `<markdown>` rendering
+
+If `bun dev` and `bun run dev` appear to render differently, first check
+for stale watchers. Bun expands both forms to the package `dev` script
+when it exists, but old `bun --watch src/index.tsx ...` processes can
+survive as orphaned children after terminal/session timeouts and keep
+showing pre-fix code.
+
+Use this before changing renderer code:
+
+```bash
+ps -axo pid,ppid,lstart,command | rg 'bun (run )?dev|bun --watch src/index.tsx|src/index.tsx'
+```
+
+Then inspect any suspicious process with:
+
+```bash
+lsof -a -p <pid> -d cwd
+```
+
+The red herring to avoid: replacing opentui's markdown code-block path
+with a custom `renderNode` override just because a running TUI looks
+stale. First reproduce in-process with `testRender`, `renderer.idle()`,
+and `captureSpans()` against the current checkout.
+
 ## Keymap changes
 
 Bindings are data: `src/keymap/browser.ts` is the single source for

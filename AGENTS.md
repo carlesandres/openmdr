@@ -48,6 +48,12 @@ intermediate frames) use `captureSpans()`, `renderer.idle()`,
 text". Don't reach for PTY-based testing — `captureSpans` covers
 every case we have today.
 
+If `bun dev` and `bun run dev` seem to differ, check for stale watcher
+processes before changing renderer code. Both resolve to the `dev`
+script, but orphaned `bun --watch src/index.tsx ...` processes can keep
+showing old behavior. Use `ps ... | rg 'bun (run )?dev|bun --watch
+src/index.tsx|src/index.tsx'` and `lsof -a -p <pid> -d cwd` to verify.
+
 ## Local commands
 
 ```bash
